@@ -24,6 +24,11 @@ export interface BaseElement {
   z: number;
   locked?: boolean;
   visible?: boolean;
+  /** optional normalised coordinates (percent of card width/height) */
+  xPercent?: number;
+  yPercent?: number;
+  widthPercent?: number;
+  heightPercent?: number;
 }
 
 export interface TextElement extends BaseElement {
