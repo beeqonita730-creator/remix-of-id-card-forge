@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CardRenderer } from "@/components/card/CardRenderer";
 import { supabase } from "@/integrations/supabase/client";
-import { getProfile, getOrganization, listTemplates, nextCardNumber } from "@/services/db";
+import { getProfile, getOrganization, listTemplates, nextCardNumber, insertCardWithNumber } from "@/services/db";
 import { uploadAndSign } from "@/services/storage";
 import { emptyDesign, type CardDesign } from "@/lib/card/types";
 import { toast } from "sonner";
@@ -110,42 +110,37 @@ function CreateCard() {
     try {
       const profile = await getProfile();
       if (!profile?.organization_id) throw new Error("No workspace");
-      const { data: inserted, error } = await supabase
-        .from("id_cards")
-        .insert({
-          organization_id: profile.organization_id,
-          created_by: profile.id,
-          template_id: template.id,
-          template_version: template.version,
-          card_size_id: size.id,
-          card_number: cardNumber,
-          full_name: form.full_name,
-          identification_number: form.identification_number || null,
-          nik: form.nik || null,
-          birth_place: form.birth_place || null,
-          birth_date: form.birth_date || null,
-          gender: form.gender || null,
-          address: form.address || null,
-          phone: form.phone || null,
-          email: form.email || null,
-          organization: org?.name ?? null,
-          department: form.department || null,
-          position: form.position || null,
-          membership_number: form.membership_number || null,
-          issue_date: form.issue_date,
-          expiry_date: form.expiry_date || null,
-          photo_url: photoUrl,
-          status: "active",
-          snapshot: {
-            front_design: template.front_design,
-            back_design: template.back_design,
-          } as never,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-      toast.success("ID card created");
+      const inserted = await insertCardWithNumber(profile.organization_id, {
+        created_by: profile.id,
+        template_id: template.id,
+        template_version: template.version,
+        card_size_id: size.id,
+        full_name: form.full_name,
+        identification_number: form.identification_number || null,
+        nik: form.nik || null,
+        birth_place: form.birth_place || null,
+        birth_date: form.birth_date || null,
+        gender: form.gender || null,
+        address: form.address || null,
+        phone: form.phone || null,
+        email: form.email || null,
+        organization: org?.name ?? null,
+        department: form.department || null,
+        position: form.position || null,
+        membership_number: form.membership_number || null,
+        issue_date: form.issue_date,
+        expiry_date: form.expiry_date || null,
+        photo_url: photoUrl,
+        status: "active",
+        snapshot: {
+          front_design: template.front_design,
+          back_design: template.back_design,
+        },
+      });
+      setCardNumber(inserted.card_number);
+      toast.success(`ID card ${inserted.card_number} created`);
       navigate({ to: "/id-cards", search: { highlight: inserted.id } });
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save the card");
     } finally {
