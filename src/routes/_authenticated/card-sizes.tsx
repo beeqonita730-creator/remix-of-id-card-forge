@@ -53,7 +53,7 @@ function CardSizes() {
   const create = useMutation({
     mutationFn: async () => {
       const profile = await getProfile();
-      if (!profile) throw new Error("No profile found");
+      if (!profile?.organization_id) throw new Error("No workspace found");
       const w = Number(form.width_mm);
       const h = Number(form.height_mm);
       const { error } = await supabase.from("card_sizes").insert({

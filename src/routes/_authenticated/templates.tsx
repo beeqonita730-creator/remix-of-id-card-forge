@@ -59,7 +59,7 @@ function Templates() {
     mutationFn: async () => {
       const profile = await getProfile();
       const size = (sizes ?? []).find((s) => s.id === sizeId);
-      if (!profile || !size) throw new Error("Choose a card size");
+      if (!profile?.organization_id || !size) throw new Error("Choose a card size");
       const { data, error } = await supabase
         .from("card_templates")
         .insert({

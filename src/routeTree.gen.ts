@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCardSizesRouteImport } from './routes/_authenticated/card-sizes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const AuthenticatedPrintHistoryRoute =
     path: '/print-history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const VerifyTokenRoute = VerifyTokenRouteImport.update({
   id: '/verify/$token',
   path: '/verify/$token',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRoutesByTo {
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRoutesById {
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/_authenticated/card-sizes': typeof AuthenticatedCardSizesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRouteTypes {
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/card-sizes'
     | '/dashboard'
     | '/print-history'
+    | '/templates'
     | '/verify/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/card-sizes'
     | '/dashboard'
     | '/print-history'
+    | '/templates'
     | '/verify/$token'
   id:
     | '__root__'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/_authenticated/card-sizes'
     | '/_authenticated/dashboard'
     | '/_authenticated/print-history'
+    | '/_authenticated/templates'
     | '/verify/$token'
   fileRoutesById: FileRoutesById
 }
@@ -158,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/verify/$token': {
       id: '/verify/$token'
       path: '/verify/$token'
@@ -172,12 +191,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCardSizesRoute: typeof AuthenticatedCardSizesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCardSizesRoute: AuthenticatedCardSizesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
