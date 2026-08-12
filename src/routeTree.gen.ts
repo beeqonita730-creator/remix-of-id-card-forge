@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCardSizesRouteImport } from './routes/_authenticated/card-sizes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,18 +40,26 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrintHistoryRoute =
+  AuthenticatedPrintHistoryRouteImport.update({
+    id: '/print-history',
+    path: '/print-history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/print-history': typeof AuthenticatedPrintHistoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/print-history': typeof AuthenticatedPrintHistoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +68,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/card-sizes': typeof AuthenticatedCardSizesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/card-sizes' | '/dashboard'
+  fullPaths: '/' | '/auth' | '/card-sizes' | '/dashboard' | '/print-history'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/card-sizes' | '/dashboard'
+  to: '/' | '/auth' | '/card-sizes' | '/dashboard' | '/print-history'
   id:
     | '__root__'
     | '/'
@@ -72,6 +82,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/card-sizes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/print-history'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,17 +128,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/print-history': {
+      id: '/_authenticated/print-history'
+      path: '/print-history'
+      fullPath: '/print-history'
+      preLoaderRoute: typeof AuthenticatedPrintHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCardSizesRoute: typeof AuthenticatedCardSizesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCardSizesRoute: AuthenticatedCardSizesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
