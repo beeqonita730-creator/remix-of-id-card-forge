@@ -33,6 +33,9 @@ export const Route = createFileRoute("/_authenticated/id-cards/")({
 function IdCardsPage() {
   const { highlight } = Route.useSearch();
   const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const { canPrint } = useRoles();
   const { data, isLoading } = useQuery({ queryKey: ["id-cards"], queryFn: listCards });
 
   const rows = useMemo(() => {
@@ -46,6 +49,10 @@ function IdCardsPage() {
     );
   }, [data, q]);
 
+  const toggle = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const allSelected = rows.length > 0 && rows.every((r) => selected.includes(r.id));
+
   return (
     <AppShell
       title="ID Cards"
@@ -58,6 +65,13 @@ function IdCardsPage() {
             onChange={(e) => setQ(e.target.value)}
             className="w-56"
           />
+          <Button
+            variant="secondary"
+            disabled={selected.length === 0}
+            onClick={() => setSheetOpen(true)}
+          >
+            Sheet export{selected.length ? ` (${selected.length})` : ""}
+          </Button>
           <Button asChild>
             <Link to="/id-cards/create">New card</Link>
           </Button>
@@ -68,6 +82,15 @@ function IdCardsPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
+              <th className="px-4 py-3">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(v) =>
+                    setSelected(v === true ? rows.map((r) => r.id) : [])
+                  }
+                  aria-label="Select all cards"
+                />
+              </th>
               <th className="px-4 py-3">Card number</th>
               <th className="px-4 py-3">Holder</th>
               <th className="px-4 py-3">Department</th>
@@ -79,13 +102,13 @@ function IdCardsPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td className="px-4 py-8 text-center text-muted-foreground" colSpan={6}>
+                <td className="px-4 py-8 text-center text-muted-foreground" colSpan={7}>
                   Loading cards…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-center text-muted-foreground" colSpan={6}>
+                <td className="px-4 py-8 text-center text-muted-foreground" colSpan={7}>
                   No cards yet.
                 </td>
               </tr>
@@ -97,6 +120,13 @@ function IdCardsPage() {
                     key={c.id}
                     className={`border-t ${highlight === c.id ? "bg-accent/40" : ""}`}
                   >
+                    <td className="px-4 py-3">
+                      <Checkbox
+                        checked={selected.includes(c.id)}
+                        onCheckedChange={() => toggle(c.id)}
+                        aria-label={`Select ${c.card_number}`}
+                      />
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs">{c.card_number}</td>
                     <td className="px-4 py-3 font-medium">{c.full_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{c.department ?? "—"}</td>
@@ -112,6 +142,14 @@ function IdCardsPage() {
           </tbody>
         </table>
       </div>
+
+      <BatchSheetDialog
+        cardIds={selected}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        canPrint={canPrint}
+      />
     </AppShell>
   );
+
 }
