@@ -3,6 +3,7 @@ import type { CardDesign, CodeElement, ImageElement, ShapeElement, TextElement }
 import { buildContext, resolveTokens, type CardData } from "./fields";
 import { barcodeDataUrl, qrDataUrl, toDataUrl } from "./codes";
 import { computeSheet, type SheetConfig } from "./sheet";
+import { backgroundBox } from "./background";
 
 const hexToRgb = (hex: string): [number, number, number] => {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex ?? "");
@@ -73,14 +74,25 @@ export function drawDesign(
   const { offsetX: ox, offsetY: oy, widthMm: W, heightMm: H } = opts;
   const ctx = buildContext(opts.data, opts.origin);
 
-  const bg = design.background?.color ?? "#ffffff";
+  const bgLayer = design.background;
+  const bg = bgLayer?.color ?? "#ffffff";
   doc.setFillColor(...hexToRgb(bg));
   doc.rect(ox, oy, W, H, "F");
   if (assets["__bg"]) {
+    const box = backgroundBox(bgLayer, W, H, 0);
     try {
-      doc.addImage(assets["__bg"], ox, oy, W, H, undefined, "FAST");
+      doc.saveGraphicsState();
+      doc.rect(ox, oy, W, H);
+      doc.clip();
+      doc.discardPath();
+      doc.addImage(assets["__bg"], ox + box.x, oy + box.y, box.w, box.h, undefined, "FAST");
+      doc.restoreGraphicsState();
     } catch {
-      /* ignore unsupported image */
+      try {
+        doc.addImage(assets["__bg"], ox + box.x, oy + box.y, box.w, box.h, undefined, "FAST");
+      } catch {
+        /* ignore unsupported image */
+      }
     }
   }
 
