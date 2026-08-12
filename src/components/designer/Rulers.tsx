@@ -15,8 +15,9 @@ function ticks(lengthMm: number) {
 }
 
 /** mm rulers that follow the canvas dimensions, so they flip with orientation. */
-export function Rulers({ widthMm, heightMm, scale, children }: RulerProps) {
+export function Rulers({ widthMm, heightMm, scale, show = true, children }: RulerProps) {
   const step = scale < 3 ? 10 : 5;
+  if (!show) return <>{children}</>;
   return (
     <div className="inline-block">
       <div className="flex">
