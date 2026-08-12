@@ -20,6 +20,7 @@ interface Props {
   gridSize?: number;
   safeMargin?: number;
   snap: number;
+  hideBackground?: boolean;
 }
 
 type DragState = {
@@ -50,6 +51,7 @@ export function DesignCanvas({
   gridSize,
   safeMargin = 3,
   snap,
+  hideBackground,
 }: Props) {
   const drag = useRef<DragState | null>(null);
   const [, force] = useState(0);
@@ -115,6 +117,7 @@ export function DesignCanvas({
         scale={scale}
         data={data}
         interactive
+        hideBackground={hideBackground}
         onSelect={onSelect}
         guides={{
           showGrid,

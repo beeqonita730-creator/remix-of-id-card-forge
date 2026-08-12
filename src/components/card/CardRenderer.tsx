@@ -206,7 +206,7 @@ export function CardRenderer({
 
   const bg = design.background;
   const box = backgroundBox(bg, widthMm, heightMm, bleed);
-  const showArtwork = !!bg?.imageUrl && !hideBackground && bg?.hiddenInEditor !== true;
+  const showArtwork = !!bg?.imageUrl && !hideBackground;
   const gradient = gradientCss(bg?.gradient);
 
   const artwork = showArtwork ? (
