@@ -35,6 +35,27 @@ import {
   type CardElement,
   type ElementType,
 } from "@/lib/card/types";
+import { Rulers } from "@/components/designer/Rulers";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  formatDims,
+  normalizeOrientation,
+  orientationLabel,
+  resolveDims,
+  supportsOrientation,
+  transformDesign,
+  validateDesign,
+  TRANSFORM_MODES,
+  type Orientation,
+  type TransformMode,
+} from "@/lib/card/orientation";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/designer/$templateId")({
