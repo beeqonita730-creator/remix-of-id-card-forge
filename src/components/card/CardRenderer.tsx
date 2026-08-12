@@ -19,7 +19,7 @@ interface Props {
   widthMm: number;
   heightMm: number;
   /** Informational: dimensions above are always authoritative. */
-  orientation?: "portrait" | "landscape";
+  orientation?: "portrait" | "landscape" | undefined;
   data?: CardData;
   /** pixels per millimetre */
   scale?: number;
