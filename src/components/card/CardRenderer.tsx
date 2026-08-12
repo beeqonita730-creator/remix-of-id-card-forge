@@ -200,6 +200,32 @@ export function CardRenderer({
 
   const elements = [...(design.elements ?? [])].sort((a, b) => a.z - b.z);
 
+  const bg = design.background;
+  const box = backgroundBox(bg, widthMm, heightMm, bleed);
+  const showArtwork = !!bg?.imageUrl && !hideBackground && bg?.hiddenInEditor !== true;
+  const gradient = gradientCss(bg?.gradient);
+
+  const artwork = showArtwork ? (
+    <img
+      src={bg!.imageUrl!}
+      alt=""
+      draggable={false}
+      style={{
+        position: "absolute",
+        left: `${(box.x + bleed) * scale}px`,
+        top: `${(box.y + bleed) * scale}px`,
+        width: `${box.w * scale}px`,
+        height: `${box.h * scale}px`,
+        objectFit: fitToObjectFit(bg?.fit),
+        opacity: bg?.opacity ?? 1,
+        transform: bg?.rotation ? `rotate(${bg.rotation}deg)` : undefined,
+        pointerEvents: "none",
+        userSelect: "none",
+        zIndex: 0,
+      }}
+    />
+  ) : null;
+
   return (
     <div
       className={className}
@@ -208,15 +234,14 @@ export function CardRenderer({
         position: "relative",
         width: `${(widthMm + bleed * 2) * scale}px`,
         height: `${(heightMm + bleed * 2) * scale}px`,
-        background: design.background?.color ?? "#ffffff",
-        backgroundImage: design.background?.imageUrl ? `url(${design.background.imageUrl})` : undefined,
-        backgroundSize: "100% 100%",
+        background: gradient ? `${gradient}, ${bg?.color ?? "#ffffff"}` : (bg?.color ?? "#ffffff"),
         overflow: "hidden",
       }}
       onPointerDown={(e) => {
         if (interactive && e.target === e.currentTarget) onSelect?.(null);
       }}
     >
+      {artwork}
       {bleed > 0 && guides?.showTrim !== false ? (
         <div
           style={{
@@ -238,9 +263,6 @@ export function CardRenderer({
           top: `${bleed * scale}px`,
           width: `${widthMm * scale}px`,
           height: `${heightMm * scale}px`,
-          background: design.background?.color ?? "#ffffff",
-          backgroundImage: design.background?.imageUrl ? `url(${design.background.imageUrl})` : undefined,
-          backgroundSize: "100% 100%",
           overflow: "hidden",
         }}
         onPointerDown={(e) => {
