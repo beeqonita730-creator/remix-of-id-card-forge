@@ -120,23 +120,46 @@ function Designer() {
   const [zoom, setZoom] = useState(4);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(true);
+  const [showBleed, setShowBleed] = useState(false);
+  const [showRulers, setShowRulers] = useState(true);
+  const [bleed, setBleed] = useState(3);
+  const [safeMargin, setSafeMargin] = useState(3);
+  const [gridSize, setGridSize] = useState(1);
   const [snap, setSnap] = useState(0.5);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [pendingOrientation, setPendingOrientation] = useState<Orientation | null>(null);
+  const [transformMode, setTransformMode] = useState<TransformMode>("relayout");
 
   useEffect(() => {
     if (!template) return;
     setFront((template.front_design as unknown as CardDesign) ?? emptyDesign());
     setBack((template.back_design as unknown as CardDesign) ?? emptyDesign());
+    setOrientation(normalizeOrientation(template.orientation));
   }, [template]);
 
   const size = template?.card_sizes;
+  const dims = resolveDims(size, orientation);
   const design = side === "front" ? front : back;
   const setDesign = side === "front" ? setFront : setBack;
   const selected = useMemo(
     () => (design.elements ?? []).find((e) => e.id === selectedId) ?? null,
     [design, selectedId],
   );
+  const issues = useMemo(() => validateDesign(design, dims, safeMargin), [design, dims, safeMargin]);
+
+  const applyOrientation = (next: Orientation, mode: TransformMode) => {
+    const from = resolveDims(size, orientation);
+    const to = resolveDims(size, next);
+    setFront((d) => transformDesign(d, from, to, mode, "front"));
+    setBack((d) => transformDesign(d, from, to, mode, "back"));
+    setOrientation(next);
+    setSelectedId(null);
+    setPendingOrientation(null);
+    toast.success(`Canvas is now ${orientationLabel(next).toLowerCase()} · ${formatDims(to)}`);
+  };
+
 
   const patchElement = (id: string, patch: Partial<CardElement>) =>
     setDesign((d) => ({
