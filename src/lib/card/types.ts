@@ -96,7 +96,7 @@ export interface CardSize {
 }
 
 export const emptyDesign = (): CardDesign => ({
-  background: { color: "#ffffff", imageUrl: null },
+  background: emptyBackground(),
   elements: [],
 });
 
