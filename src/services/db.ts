@@ -126,3 +126,57 @@ export async function listPrintHistory() {
   if (error) throw error;
   return data ?? [];
 }
+
+/* ------------------------------------------------------------------ */
+/* Template assets (uploaded backgrounds and artwork)                  */
+/* ------------------------------------------------------------------ */
+
+export interface TemplateAssetInput {
+  template_id?: string | null;
+  side?: "FRONT" | "BACK";
+  asset_type?: "BACKGROUND" | "LOGO" | "IMAGE" | "PHOTO_PLACEHOLDER" | "OTHER";
+  name?: string | null;
+  storage_path: string;
+  file_name?: string | null;
+  mime_type?: string | null;
+  width_px?: number | null;
+  height_px?: number | null;
+  size_bytes?: number | null;
+  orientation?: "portrait" | "landscape" | null;
+  card_size_id?: string | null;
+}
+
+export async function createTemplateAsset(input: TemplateAssetInput) {
+  const profile = await getProfile();
+  if (!profile?.organization_id) throw new Error("No organisation found for this account");
+  const { data: auth } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("template_assets")
+    .insert({
+      ...input,
+      organization_id: profile.organization_id,
+      created_by: auth.user?.id ?? null,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listTemplateAssets(templateId?: string) {
+  let query = supabase
+    .from("template_assets")
+    .select("*")
+    .eq("asset_type", "BACKGROUND")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (templateId) query = query.or(`template_id.eq.${templateId},template_id.is.null`);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function deleteTemplateAsset(id: string) {
+  const { error } = await supabase.from("template_assets").delete().eq("id", id);
+  if (error) throw error;
+}
