@@ -111,11 +111,19 @@ export function DesignCanvas({
         design={design}
         widthMm={widthMm}
         heightMm={heightMm}
+        orientation={orientation}
         scale={scale}
         data={data}
         interactive
         onSelect={onSelect}
-        guides={{ showGrid, showSafe, gridSize: snap || 2, safeMargin: 3 }}
+        guides={{
+          showGrid,
+          showSafe,
+          showBleed,
+          bleed,
+          gridSize: gridSize ?? snap ?? 1,
+          safeMargin,
+        }}
       >
         {(design.elements ?? []).map((el) =>
           el.visible === false ? null : (
