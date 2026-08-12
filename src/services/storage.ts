@@ -22,3 +22,15 @@ export async function uploadFile(bucket: string, file: File | Blob, ext: string)
   if (error) throw error;
   return `${bucket}/${name}`;
 }
+
+/** Upload and return a long-lived signed URL that can be embedded in designs. */
+export async function uploadAndSign(bucket: string, file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+  const stored = await uploadFile(bucket, file, ext);
+  const [b, ...rest] = stored.split("/");
+  const { data, error } = await supabase.storage
+    .from(b!)
+    .createSignedUrl(rest.join("/"), 60 * 60 * 24 * 365);
+  if (error || !data?.signedUrl) throw error ?? new Error("Could not sign uploaded file");
+  return data.signedUrl;
+}
