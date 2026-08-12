@@ -42,7 +42,7 @@ export function computeSheet(cfg: SheetConfig, cardW: number, cardH: number): Sh
   const paper =
     cfg.paper === "CUSTOM"
       ? { width_mm: cfg.customWidth ?? 210, height_mm: cfg.customHeight ?? 297 }
-      : PAPERS[cfg.paper];
+      : (PAPERS[cfg.paper] ?? PAPERS["A4"]!);
   const pageWidth = cfg.orientation === "landscape" ? paper.height_mm : paper.width_mm;
   const pageHeight = cfg.orientation === "landscape" ? paper.width_mm : paper.height_mm;
 
