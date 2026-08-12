@@ -178,15 +178,9 @@ function Designer() {
     setSelectedId(null);
   };
 
-  const uploadBackground = async (file: File) => {
-    try {
-      const url = await uploadAndSign("template-assets", file);
-      setDesign((d) => ({ ...d, background: { ...d.background, imageUrl: url } }));
-      toast.success("Background applied");
-    } catch {
-      toast.error("Upload failed");
-    }
-  };
+  const patchBackground = (patch: Partial<CardBackground>) =>
+    setDesign((d) => ({ ...d, background: { ...emptyBackground(), ...d.background, ...patch } }));
+
 
   const uploadElementImage = async (file: File) => {
     if (!selected) return;
@@ -331,46 +325,21 @@ function Designer() {
               </div>
 
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {side} background
+                {side} background layer
               </p>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={design.background?.color ?? "#ffffff"}
-                    onChange={(e) =>
-                      setDesign((d) => ({ ...d, background: { ...d.background, color: e.target.value } }))
-                    }
-                    className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent"
-                  />
-                  <Input
-                    className="h-8"
-                    value={design.background?.color ?? "#ffffff"}
-                    onChange={(e) =>
-                      setDesign((d) => ({ ...d, background: { ...d.background, color: e.target.value } }))
-                    }
-                  />
-                </div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="h-8"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadBackground(f);
-                  }}
+              <div className="mt-2">
+                <BackgroundPanel
+                  background={design.background}
+                  onChange={patchBackground}
+                  widthMm={dims.widthMm}
+                  heightMm={dims.heightMm}
+                  side={side}
+                  templateId={templateId}
+                  orientation={orientation}
+                  cardSizeId={size.id}
                 />
-                {design.background?.imageUrl ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setDesign((d) => ({ ...d, background: { ...d.background, imageUrl: null } }))}
-                  >
-                    Remove artwork
-                  </Button>
-                ) : null}
               </div>
+
 
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Guides</p>
               <div className="mt-2 space-y-2">
