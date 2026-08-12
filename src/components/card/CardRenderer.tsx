@@ -29,7 +29,7 @@ interface Props {
   onSelect?: (id: string | null) => void;
   interactive?: boolean;
   /** editor toggle — hides the background artwork without changing the design */
-  hideBackground?: boolean;
+  hideBackground?: boolean | undefined;
   children?: React.ReactNode;
   className?: string;
 }

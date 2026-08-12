@@ -36,6 +36,12 @@ import {
   type ElementType,
 } from "@/lib/card/types";
 import { Rulers } from "@/components/designer/Rulers";
+import { BackgroundPanel } from "@/components/designer/BackgroundPanel";
+import {
+  emptyBackground,
+  transformBackground,
+  type CardBackground,
+} from "@/lib/card/background";
 import {
   Dialog,
   DialogContent,
@@ -152,8 +158,15 @@ function Designer() {
   const applyOrientation = (next: Orientation, mode: TransformMode) => {
     const from = resolveDims(size, orientation);
     const to = resolveDims(size, next);
-    setFront((d) => transformDesign(d, from, to, mode, "front"));
-    setBack((d) => transformDesign(d, from, to, mode, "back"));
+    const bgMode = mode === "fresh" ? "keep" : mode === "rotate" ? "fill" : "fit";
+    setFront((d) => {
+      const next = transformDesign(d, from, to, mode, "front");
+      return { ...next, background: transformBackground(d.background, from, to, bgMode) };
+    });
+    setBack((d) => {
+      const next = transformDesign(d, from, to, mode, "back");
+      return { ...next, background: transformBackground(d.background, from, to, bgMode) };
+    });
     setOrientation(next);
     setSelectedId(null);
     setPendingOrientation(null);
