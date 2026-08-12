@@ -7,7 +7,7 @@ interface Props {
   design: CardDesign;
   widthMm: number;
   heightMm: number;
-  orientation?: "portrait" | "landscape";
+  orientation?: "portrait" | "landscape" | undefined;
   scale: number;
   data: CardData;
   selectedId: string | null;
