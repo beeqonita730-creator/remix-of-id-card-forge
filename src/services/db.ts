@@ -169,17 +169,12 @@ export async function reissueCard(cardId: string) {
   if (!card) throw new Error("Card not found");
   const number = await nextCardNumber(card.organization_id);
   const { data: auth } = await supabase.auth.getUser();
-  const {
-    id: _id,
-    created_at: _c,
-    updated_at: _u,
-    qr_token: _q,
-    card_sizes: _s,
-    card_templates: _t,
-    ...rest
-  } = card as Record<string, unknown> as never;
+  const source = card as unknown as Record<string, unknown>;
+  const rest: Record<string, unknown> = {};
+  const skip = new Set(["id", "created_at", "updated_at", "qr_token", "card_sizes", "card_templates"]);
+  for (const [k, v] of Object.entries(source)) if (!skip.has(k)) rest[k] = v;
   const payload = {
-    ...(rest as Record<string, unknown>),
+    ...rest,
     card_number: number,
     status: "active",
     issue_date: new Date().toISOString().slice(0, 10),
