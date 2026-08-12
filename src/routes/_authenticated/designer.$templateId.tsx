@@ -235,11 +235,60 @@ function Designer() {
           <div>
             <p className="text-sm font-semibold leading-tight">{template.name}</p>
             <p className="text-xs text-muted-foreground">
-              {size.name} · {size.width_mm} × {size.height_mm} mm
+              {size.name} · {formatDims(dims)} · {orientationLabel(orientation)}
             </p>
           </div>
           <Badge variant="outline">v{template.version}</Badge>
+          <Tabs
+            value={orientation}
+            onValueChange={(v) => {
+              const next = normalizeOrientation(v);
+              if (next === orientation) return;
+              if (!supportsOrientation(size, next)) {
+                toast.error("This card size doesn't allow that orientation.");
+                return;
+              }
+              setPendingOrientation(next);
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="portrait">Portrait</TabsTrigger>
+              <TabsTrigger value="landscape">Landscape</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
+        <Dialog open={!!pendingOrientation} onOpenChange={(o) => !o && setPendingOrientation(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Switch to {pendingOrientation ? orientationLabel(pendingOrientation).toLowerCase() : ""} (
+                {pendingOrientation ? formatDims(resolveDims(size, pendingOrientation)) : ""})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-1.5">
+              {TRANSFORM_MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setTransformMode(m.id)}
+                  className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                    transformMode === m.id ? "border-primary bg-accent" : "border-border hover:border-primary"
+                  }`}
+                >
+                  <span className="block font-semibold">{m.label}</span>
+                  <span className="text-muted-foreground">{m.description}</span>
+                </button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => pendingOrientation && applyOrientation(pendingOrientation, transformMode)}
+              >
+                Apply
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <div className="flex flex-wrap items-center gap-2">
           <Tabs value={side} onValueChange={(v) => { setSide(v as "front" | "back"); setSelectedId(null); }}>
             <TabsList>
