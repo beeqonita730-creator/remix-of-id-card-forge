@@ -5,8 +5,12 @@ import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BatchSheetDialog } from "@/components/cards/BatchSheetDialog";
+import { useRoles } from "@/hooks/useRoles";
 import { listCards } from "@/services/db";
 import { effectiveStatus, STATUS_LABEL, statusTone } from "@/lib/card/status";
+
 
 export const Route = createFileRoute("/_authenticated/id-cards/")({
   validateSearch: (search: Record<string, unknown>) => {
