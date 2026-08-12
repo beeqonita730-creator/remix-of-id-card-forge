@@ -1,8 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getProfile } from "@/services/db";
 
 const cache = new Map<string, string>();
 
-/** Stored value is "<bucket>/<path>". Returns a temporary signed URL. */
+async function resolveCurrentOrgId(): Promise<string> {
+  const profile = await getProfile();
+  if (!profile?.organization_id) {
+    throw new Error("No workspace found for this account — cannot determine storage path");
+  }
+  return profile.organization_id;
+}
+
 export async function signedUrl(stored?: string | null): Promise<string | null> {
   if (!stored) return null;
   if (stored.startsWith("http") || stored.startsWith("data:")) return stored;
@@ -16,25 +24,63 @@ export async function signedUrl(stored?: string | null): Promise<string | null> 
   return data.signedUrl;
 }
 
-export async function uploadFile(bucket: string, file: File | Blob, ext: string): Promise<string> {
-  const name = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from(bucket).upload(name, file, { upsert: false });
+async function uploadScopedFile(
+  bucket: "card-photos" | "template-assets",
+  file: File | Blob,
+  ext: string,
+  subPath?: string,
+): Promise<string> {
+  const orgId = await resolveCurrentOrgId();
+  const fileName = `${crypto.randomUUID()}.${ext}`;
+  const pathParts = [orgId];
+  if (subPath) pathParts.push(subPath);
+  pathParts.push(fileName);
+  const path = pathParts.join("/");
+  const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
   if (error) throw error;
-  return `${bucket}/${name}`;
+  return `${bucket}/${path}`;
 }
 
-/** Upload and return a long-lived signed URL that can be embedded in designs. */
-export async function uploadAndSign(bucket: string, file: File): Promise<string> {
-  return (await uploadAsset(bucket, file)).url;
-}
-
-/** Upload and return both the storage reference and a long-lived signed URL. */
-export async function uploadAsset(
-  bucket: string,
+export async function uploadCardholderPhoto(
+  cardholderId: string | null,
   file: File,
 ): Promise<{ storagePath: string; url: string }> {
   const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const stored = await uploadFile(bucket, file, ext);
+  const sub = cardholderId ? `cardholders/${cardholderId}` : "cardholders";
+  const stored = await uploadScopedFile("card-photos", file, ext, sub);
+  const [b, ...rest] = stored.split("/");
+  const { data, error } = await supabase.storage
+    .from(b!)
+    .createSignedUrl(rest.join("/"), 60 * 60 * 24 * 365);
+  if (error || !data?.signedUrl) throw error ?? new Error("Could not sign uploaded photo");
+  return { storagePath: stored, url: data.signedUrl };
+}
+
+export async function uploadTemplateAsset(
+  file: File,
+  templateId?: string | null,
+): Promise<{ storagePath: string; url: string }> {
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+  const sub = templateId ? `templates/${templateId}` : "templates";
+  const stored = await uploadScopedFile("template-assets", file, ext, sub);
+  const [b, ...rest] = stored.split("/");
+  const { data, error } = await supabase.storage
+    .from(b!)
+    .createSignedUrl(rest.join("/"), 60 * 60 * 24 * 365);
+  if (error || !data?.signedUrl) throw error ?? new Error("Could not sign uploaded asset");
+  return { storagePath: stored, url: data.signedUrl };
+}
+
+export async function uploadAndSign(bucket: string, file: File): Promise<string> {
+  return (await uploadGenericAsset(bucket as "card-photos" | "template-assets", file)).url;
+}
+
+export async function uploadGenericAsset(
+  bucket: "card-photos" | "template-assets",
+  file: File,
+): Promise<{ storagePath: string; url: string }> {
+  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+  const stored = await uploadScopedFile(bucket, file, ext, "uploads");
   const [b, ...rest] = stored.split("/");
   const { data, error } = await supabase.storage
     .from(b!)
@@ -43,7 +89,8 @@ export async function uploadAsset(
   return { storagePath: stored, url: data.signedUrl };
 }
 
-/** Refresh a signed URL for a stored asset (signed links eventually expire). */
+export const uploadAsset = uploadGenericAsset;
+
 export async function resignAsset(stored: string, seconds = 60 * 60 * 24 * 365): Promise<string | null> {
   const [bucket, ...rest] = stored.split("/");
   if (!bucket || rest.length === 0) return null;
@@ -51,3 +98,4 @@ export async function resignAsset(stored: string, seconds = 60 * 60 * 24 * 365):
   return data?.signedUrl ?? null;
 }
 
+export { uploadScopedFile as _uploadScopedFile };
