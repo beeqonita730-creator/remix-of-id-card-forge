@@ -18,6 +18,7 @@ import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authent
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AuthenticatedDesignerTemplateIdRouteImport } from './routes/_authenticated/designer.$templateId'
+import { Route as AuthenticatedIdCardsCreateRouteImport } from './routes/_authenticated/id-cards.create'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -65,6 +66,12 @@ const AuthenticatedDesignerTemplateIdRoute =
     path: '/designer/$templateId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedIdCardsCreateRoute =
+  AuthenticatedIdCardsCreateRouteImport.update({
+    id: '/id-cards/create',
+    path: '/id-cards/create',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
+  '/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesByTo {
   '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
+  '/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,6 +106,7 @@ export interface FileRoutesById {
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/_authenticated/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
+  '/_authenticated/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/verify/$token'
     | '/designer/$templateId'
+    | '/id-cards/create'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/verify/$token'
     | '/designer/$templateId'
+    | '/id-cards/create'
   id:
     | '__root__'
     | '/'
@@ -130,6 +142,7 @@ export interface FileRouteTypes {
     | '/_authenticated/templates'
     | '/verify/$token'
     | '/_authenticated/designer/$templateId'
+    | '/_authenticated/id-cards/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDesignerTemplateIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/id-cards/create': {
+      id: '/_authenticated/id-cards/create'
+      path: '/id-cards/create'
+      fullPath: '/id-cards/create'
+      preLoaderRoute: typeof AuthenticatedIdCardsCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -213,6 +233,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedDesignerTemplateIdRoute: typeof AuthenticatedDesignerTemplateIdRoute
+  AuthenticatedIdCardsCreateRoute: typeof AuthenticatedIdCardsCreateRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -221,6 +242,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedDesignerTemplateIdRoute: AuthenticatedDesignerTemplateIdRoute,
+  AuthenticatedIdCardsCreateRoute: AuthenticatedIdCardsCreateRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -235,3 +257,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
