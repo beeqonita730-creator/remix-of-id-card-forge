@@ -2,6 +2,7 @@ interface RulerProps {
   widthMm: number;
   heightMm: number;
   scale: number;
+  show?: boolean;
   children: React.ReactNode;
 }
 
