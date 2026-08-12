@@ -263,15 +263,12 @@ export async function createCardsBulk(
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i]!;
     try {
-      const number = await nextCardNumber(profile.organization_id);
-      const { error } = await supabase.from("id_cards").insert({
-        organization_id: profile.organization_id,
+      await insertCardWithNumber(profile.organization_id, {
         created_by: profile.id,
         template_id: opts.templateId,
         template_version: opts.templateVersion,
         card_size_id: opts.cardSizeId,
         orientation: opts.orientation,
-        card_number: number,
         full_name: r.full_name,
         identification_number: r.identification_number || null,
         nik: r.nik || null,
@@ -289,10 +286,10 @@ export async function createCardsBulk(
         expiry_date: r.expiry_date || null,
         photo_url: r.photo_url || null,
         status: opts.status ?? "active",
-        snapshot: { front_design: opts.frontDesign, back_design: opts.backDesign } as never,
+        snapshot: { front_design: opts.frontDesign, back_design: opts.backDesign },
       });
-      if (error) throw error;
       created++;
+
     } catch (e) {
       errors.push({ row: i + 1, message: e instanceof Error ? e.message : "Insert failed" });
     }
