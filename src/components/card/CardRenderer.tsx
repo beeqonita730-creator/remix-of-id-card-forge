@@ -3,6 +3,7 @@ import type { CardDesign, CardElement, ImageElement, CodeElement, ShapeElement, 
 import { PT_TO_MM } from "@/lib/card/types";
 import { buildContext, resolveTokens, type CardData } from "@/lib/card/fields";
 import { barcodeDataUrl, qrDataUrl } from "@/lib/card/codes";
+import { backgroundBox, fitToObjectFit, gradientCss } from "@/lib/card/background";
 
 export interface RenderGuides {
   bleed?: number;
@@ -27,6 +28,8 @@ interface Props {
   selectedId?: string | null;
   onSelect?: (id: string | null) => void;
   interactive?: boolean;
+  /** editor toggle — hides the background artwork without changing the design */
+  hideBackground?: boolean;
   children?: React.ReactNode;
   className?: string;
 }
