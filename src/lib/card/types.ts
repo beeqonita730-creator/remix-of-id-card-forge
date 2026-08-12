@@ -1,3 +1,7 @@
+import { emptyBackground, type CardBackground } from "./background";
+
+export type { CardBackground };
+
 export type ElementType =
   | "text"
   | "image"
@@ -73,7 +77,7 @@ export interface ShapeElement extends BaseElement {
 export type CardElement = TextElement | ImageElement | CodeElement | ShapeElement;
 
 export interface CardDesign {
-  background: { color: string; imageUrl?: string | null };
+  background: CardBackground;
   elements: CardElement[];
 }
 
@@ -92,7 +96,7 @@ export interface CardSize {
 }
 
 export const emptyDesign = (): CardDesign => ({
-  background: { color: "#ffffff", imageUrl: null },
+  background: emptyBackground(),
   elements: [],
 });
 

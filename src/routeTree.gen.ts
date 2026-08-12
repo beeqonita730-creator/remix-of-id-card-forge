@@ -18,6 +18,7 @@ import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authent
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AuthenticatedDesignerTemplateIdRouteImport } from './routes/_authenticated/designer.$templateId'
+import { Route as AuthenticatedIdCardsIndexRouteImport } from './routes/_authenticated/id-cards.index'
 import { Route as AuthenticatedIdCardsCreateRouteImport } from './routes/_authenticated/id-cards.create'
 
 const IndexRoute = IndexRouteImport.update({
@@ -66,6 +67,12 @@ const AuthenticatedDesignerTemplateIdRoute =
     path: '/designer/$templateId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedIdCardsIndexRoute =
+  AuthenticatedIdCardsIndexRouteImport.update({
+    id: '/id-cards/',
+    path: '/id-cards/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedIdCardsCreateRoute =
   AuthenticatedIdCardsCreateRouteImport.update({
     id: '/id-cards/create',
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/verify/$token': typeof VerifyTokenRoute
   '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
   '/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
+  '/id-cards/': typeof AuthenticatedIdCardsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/verify/$token': typeof VerifyTokenRoute
   '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
   '/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
+  '/id-cards': typeof AuthenticatedIdCardsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/verify/$token': typeof VerifyTokenRoute
   '/_authenticated/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
   '/_authenticated/id-cards/create': typeof AuthenticatedIdCardsCreateRoute
+  '/_authenticated/id-cards/': typeof AuthenticatedIdCardsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/verify/$token'
     | '/designer/$templateId'
     | '/id-cards/create'
+    | '/id-cards/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/verify/$token'
     | '/designer/$templateId'
     | '/id-cards/create'
+    | '/id-cards'
   id:
     | '__root__'
     | '/'
@@ -143,6 +155,7 @@ export interface FileRouteTypes {
     | '/verify/$token'
     | '/_authenticated/designer/$templateId'
     | '/_authenticated/id-cards/create'
+    | '/_authenticated/id-cards/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -217,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDesignerTemplateIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/id-cards/': {
+      id: '/_authenticated/id-cards/'
+      path: '/id-cards'
+      fullPath: '/id-cards/'
+      preLoaderRoute: typeof AuthenticatedIdCardsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/id-cards/create': {
       id: '/_authenticated/id-cards/create'
       path: '/id-cards/create'
@@ -234,6 +254,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedDesignerTemplateIdRoute: typeof AuthenticatedDesignerTemplateIdRoute
   AuthenticatedIdCardsCreateRoute: typeof AuthenticatedIdCardsCreateRoute
+  AuthenticatedIdCardsIndexRoute: typeof AuthenticatedIdCardsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -243,6 +264,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedDesignerTemplateIdRoute: AuthenticatedDesignerTemplateIdRoute,
   AuthenticatedIdCardsCreateRoute: AuthenticatedIdCardsCreateRoute,
+  AuthenticatedIdCardsIndexRoute: AuthenticatedIdCardsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

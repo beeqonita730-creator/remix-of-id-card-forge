@@ -16,6 +16,9 @@ import {
   Eye,
   ZoomIn,
   ZoomOut,
+  EyeOff,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,6 +39,12 @@ import {
   type ElementType,
 } from "@/lib/card/types";
 import { Rulers } from "@/components/designer/Rulers";
+import { BackgroundPanel } from "@/components/designer/BackgroundPanel";
+import {
+  emptyBackground,
+  transformBackground,
+  type CardBackground,
+} from "@/lib/card/background";
 import {
   Dialog,
   DialogContent,
@@ -152,8 +161,15 @@ function Designer() {
   const applyOrientation = (next: Orientation, mode: TransformMode) => {
     const from = resolveDims(size, orientation);
     const to = resolveDims(size, next);
-    setFront((d) => transformDesign(d, from, to, mode, "front"));
-    setBack((d) => transformDesign(d, from, to, mode, "back"));
+    const bgMode = mode === "fresh" ? "keep" : mode === "rotate" ? "fill" : "fit";
+    setFront((d) => {
+      const next = transformDesign(d, from, to, mode, "front");
+      return { ...next, background: transformBackground(d.background, from, to, bgMode) };
+    });
+    setBack((d) => {
+      const next = transformDesign(d, from, to, mode, "back");
+      return { ...next, background: transformBackground(d.background, from, to, bgMode) };
+    });
     setOrientation(next);
     setSelectedId(null);
     setPendingOrientation(null);
@@ -178,15 +194,9 @@ function Designer() {
     setSelectedId(null);
   };
 
-  const uploadBackground = async (file: File) => {
-    try {
-      const url = await uploadAndSign("template-assets", file);
-      setDesign((d) => ({ ...d, background: { ...d.background, imageUrl: url } }));
-      toast.success("Background applied");
-    } catch {
-      toast.error("Upload failed");
-    }
-  };
+  const patchBackground = (patch: Partial<CardBackground>) =>
+    setDesign((d) => ({ ...d, background: { ...emptyBackground(), ...d.background, ...patch } }));
+
 
   const uploadElementImage = async (file: File) => {
     if (!selected) return;
@@ -331,46 +341,21 @@ function Designer() {
               </div>
 
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {side} background
+                {side} background layer
               </p>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={design.background?.color ?? "#ffffff"}
-                    onChange={(e) =>
-                      setDesign((d) => ({ ...d, background: { ...d.background, color: e.target.value } }))
-                    }
-                    className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent"
-                  />
-                  <Input
-                    className="h-8"
-                    value={design.background?.color ?? "#ffffff"}
-                    onChange={(e) =>
-                      setDesign((d) => ({ ...d, background: { ...d.background, color: e.target.value } }))
-                    }
-                  />
-                </div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="h-8"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadBackground(f);
-                  }}
+              <div className="mt-2">
+                <BackgroundPanel
+                  background={design.background}
+                  onChange={patchBackground}
+                  widthMm={dims.widthMm}
+                  heightMm={dims.heightMm}
+                  side={side}
+                  templateId={templateId}
+                  orientation={orientation}
+                  cardSizeId={size.id}
                 />
-                {design.background?.imageUrl ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setDesign((d) => ({ ...d, background: { ...d.background, imageUrl: null } }))}
-                  >
-                    Remove artwork
-                  </Button>
-                ) : null}
               </div>
+
 
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Guides</p>
               <div className="mt-2 space-y-2">
@@ -481,6 +466,7 @@ function Designer() {
                 showBleed={showBleed}
                 bleed={bleed}
                 snap={snap}
+                hideBackground={design.background?.hiddenInEditor === true}
               />
             </Rulers>
           )}
@@ -510,6 +496,34 @@ function Designer() {
                 {(design.elements ?? []).length === 0 ? (
                   <p className="py-4 text-center text-xs text-muted-foreground">Nothing on this side yet.</p>
                 ) : null}
+                <div className="flex items-center justify-between rounded-md border border-dashed border-border px-2 py-1.5 text-xs text-muted-foreground">
+                  <span className="truncate">
+                    Background
+                    <span className="ml-1">
+                      ({design.background?.imageUrl ? (design.background.fit ?? "fill") : "colour"})
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      title={design.background?.hiddenInEditor ? "Show in editor" : "Hide in editor"}
+                      onClick={() => patchBackground({ hiddenInEditor: !design.background?.hiddenInEditor })}
+                    >
+                      {design.background?.hiddenInEditor ? (
+                        <EyeOff className="size-3.5" />
+                      ) : (
+                        <Eye className="size-3.5" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      title={design.background?.locked ? "Unlock" : "Lock"}
+                      onClick={() => patchBackground({ locked: !design.background?.locked })}
+                    >
+                      {design.background?.locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
+                    </button>
+                  </span>
+                </div>
               </div>
 
               {selected ? (
