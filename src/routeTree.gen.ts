@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCardSizesRouteImport } from './routes/_authenticated/card-sizes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
+import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const AuthenticatedPrintHistoryRoute =
     path: '/print-history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const VerifyTokenRoute = VerifyTokenRouteImport.update({
+  id: '/verify/$token',
+  path: '/verify/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,12 +77,25 @@ export interface FileRoutesById {
   '/_authenticated/card-sizes': typeof AuthenticatedCardSizesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/verify/$token': typeof VerifyTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/card-sizes' | '/dashboard' | '/print-history'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/card-sizes'
+    | '/dashboard'
+    | '/print-history'
+    | '/verify/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/card-sizes' | '/dashboard' | '/print-history'
+  to:
+    | '/'
+    | '/auth'
+    | '/card-sizes'
+    | '/dashboard'
+    | '/print-history'
+    | '/verify/$token'
   id:
     | '__root__'
     | '/'
@@ -83,12 +104,14 @@ export interface FileRouteTypes {
     | '/_authenticated/card-sizes'
     | '/_authenticated/dashboard'
     | '/_authenticated/print-history'
+    | '/verify/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  VerifyTokenRoute: typeof VerifyTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/verify/$token': {
+      id: '/verify/$token'
+      path: '/verify/$token'
+      fullPath: '/verify/$token'
+      preLoaderRoute: typeof VerifyTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -157,6 +187,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  VerifyTokenRoute: VerifyTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
