@@ -391,6 +391,88 @@ export type Database = {
           },
         ]
       }
+      template_assets: {
+        Row: {
+          asset_type: string
+          card_size_id: string | null
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          height_px: number | null
+          id: string
+          mime_type: string | null
+          name: string | null
+          organization_id: string
+          orientation: string | null
+          side: string
+          size_bytes: number | null
+          storage_path: string
+          template_id: string | null
+          updated_at: string
+          width_px: number | null
+        }
+        Insert: {
+          asset_type?: string
+          card_size_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          height_px?: number | null
+          id?: string
+          mime_type?: string | null
+          name?: string | null
+          organization_id: string
+          orientation?: string | null
+          side?: string
+          size_bytes?: number | null
+          storage_path: string
+          template_id?: string | null
+          updated_at?: string
+          width_px?: number | null
+        }
+        Update: {
+          asset_type?: string
+          card_size_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          height_px?: number | null
+          id?: string
+          mime_type?: string | null
+          name?: string | null
+          organization_id?: string
+          orientation?: string | null
+          side?: string
+          size_bytes?: number | null
+          storage_path?: string
+          template_id?: string | null
+          updated_at?: string
+          width_px?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_assets_card_size_id_fkey"
+            columns: ["card_size_id"]
+            isOneToOne: false
+            referencedRelation: "card_sizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_assets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_assets_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "card_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       template_versions: {
         Row: {
           created_at: string
