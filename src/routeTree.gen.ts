@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
+import { Route as AuthenticatedDesignerTemplateIdRouteImport } from './routes/_authenticated/designer.$templateId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,12 @@ const VerifyTokenRoute = VerifyTokenRouteImport.update({
   path: '/verify/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDesignerTemplateIdRoute =
+  AuthenticatedDesignerTemplateIdRouteImport.update({
+    id: '/designer/$templateId',
+    path: '/designer/$templateId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/print-history': typeof AuthenticatedPrintHistoryRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
+  '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/print-history': typeof AuthenticatedPrintHistoryRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
+  '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/verify/$token': typeof VerifyTokenRoute
+  '/_authenticated/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/print-history'
     | '/templates'
     | '/verify/$token'
+    | '/designer/$templateId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/print-history'
     | '/templates'
     | '/verify/$token'
+    | '/designer/$templateId'
   id:
     | '__root__'
     | '/'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/_authenticated/print-history'
     | '/_authenticated/templates'
     | '/verify/$token'
+    | '/_authenticated/designer/$templateId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/designer/$templateId': {
+      id: '/_authenticated/designer/$templateId'
+      path: '/designer/$templateId'
+      fullPath: '/designer/$templateId'
+      preLoaderRoute: typeof AuthenticatedDesignerTemplateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -192,6 +212,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
+  AuthenticatedDesignerTemplateIdRoute: typeof AuthenticatedDesignerTemplateIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -199,6 +220,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
+  AuthenticatedDesignerTemplateIdRoute: AuthenticatedDesignerTemplateIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
