@@ -13,12 +13,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { listCardSizes, getProfile } from "@/services/db";
-import { mmToIn } from "@/lib/card/units";
+import { fromMm } from "@/lib/card/units";
+import type { CardSize } from "@/lib/card/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/card-sizes")({
@@ -36,7 +36,13 @@ export const Route = createFileRoute("/_authenticated/card-sizes")({
   component: CardSizes,
 });
 
-const EMPTY = { name: "", code: "", width_mm: 85.6, height_mm: 54, corner_radius_mm: 3.18, bleed_mm: 2 };
+const EMPTY = {
+  name: "",
+  code: "",
+  width_mm: "85.6",
+  height_mm: "54",
+  description: "",
+};
 
 function CardSizes() {
   const qc = useQueryClient();
@@ -47,15 +53,18 @@ function CardSizes() {
   const create = useMutation({
     mutationFn: async () => {
       const profile = await getProfile();
-      if (!profile) throw new Error("No profile");
+      if (!profile) throw new Error("No profile found");
+      const w = Number(form.width_mm);
+      const h = Number(form.height_mm);
       const { error } = await supabase.from("card_sizes").insert({
         organization_id: profile.organization_id,
         name: form.name,
         code: form.code.toUpperCase().replace(/\s+/g, "-"),
-        width_mm: Number(form.width_mm),
-        height_mm: Number(form.height_mm),
-        corner_radius_mm: Number(form.corner_radius_mm),
-        bleed_mm: Number(form.bleed_mm),
+        width_mm: w,
+        height_mm: h,
+        orientation: w >= h ? "landscape" : "portrait",
+        description: form.description || null,
+        category: "custom",
         is_system_default: false,
       });
       if (error) throw error;
@@ -78,61 +87,82 @@ function CardSizes() {
       toast.success("Card size deleted");
       qc.invalidateQueries({ queryKey: ["card-sizes"] });
     },
-    onError: () => toast.error("This size is in use by a template or card."),
+    onError: () => toast.error("This size is used by a template or card and cannot be deleted."),
   });
 
-  const field = (key: keyof typeof EMPTY, label: string, type = "number", step = "0.01") => (
-    <div className="space-y-1.5">
-      <Label htmlFor={key}>{label}</Label>
-      <Input
-        id={key}
-        type={type}
-        step={type === "number" ? step : undefined}
-        value={form[key] as string | number}
-        onChange={(e) => setForm({ ...form, [key]: type === "number" ? e.target.value : e.target.value })}
-      />
-    </div>
-  );
+  const duplicate = (s: CardSize) => {
+    setForm({
+      name: `${s.name} copy`,
+      code: `${s.code}-COPY`,
+      width_mm: String(s.width_mm),
+      height_mm: String(s.height_mm),
+      description: s.description ?? "",
+    });
+    setOpen(true);
+  };
 
   return (
     <AppShell
       title="Card sizes"
       description="Physical dimensions in millimetres. These drive the designer canvas and every print output."
       actions={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="size-4" /> New size
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New card size</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="code">Code</Label>
-                <Input id="code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-              </div>
-              {field("width_mm", "Width (mm)")}
-              {field("height_mm", "Height (mm)")}
-              {field("corner_radius_mm", "Corner radius (mm)")}
-              {field("bleed_mm", "Bleed (mm)")}
-            </div>
-            <DialogFooter>
-              <Button onClick={() => create.mutate()} disabled={!form.name || !form.code || create.isPending}>
-                Add size
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={() => { setForm(EMPTY); setOpen(true); }}>
+          <Plus className="size-4" /> New size
+        </Button>
       }
     >
-      <div className="panel overflow-hidden">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New card size</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="code">Code</Label>
+              <Input id="code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="width_mm">Width (mm)</Label>
+              <Input
+                id="width_mm"
+                type="number"
+                step="0.1"
+                value={form.width_mm}
+                onChange={(e) => setForm({ ...form, width_mm: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="height_mm">Height (mm)</Label>
+              <Input
+                id="height_mm"
+                type="number"
+                step="0.1"
+                value={form.height_mm}
+                onChange={(e) => setForm({ ...form, height_mm: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => create.mutate()} disabled={!form.name || !form.code || create.isPending}>
+              Add size
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -140,8 +170,7 @@ function CardSizes() {
               <TableHead>Code</TableHead>
               <TableHead>Millimetres</TableHead>
               <TableHead>Inches</TableHead>
-              <TableHead>Radius</TableHead>
-              <TableHead>Bleed</TableHead>
+              <TableHead>Orientation</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -155,31 +184,20 @@ function CardSizes() {
                       System
                     </Badge>
                   ) : null}
+                  {s.description ? (
+                    <p className="text-xs font-normal text-muted-foreground">{s.description}</p>
+                  ) : null}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{s.code}</TableCell>
                 <TableCell>
                   {s.width_mm} × {s.height_mm} mm
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {mmToIn(s.width_mm).toFixed(2)} × {mmToIn(s.height_mm).toFixed(2)} in
+                  {fromMm(s.width_mm, "inch").toFixed(2)} × {fromMm(s.height_mm, "inch").toFixed(2)} in
                 </TableCell>
-                <TableCell>{s.corner_radius_mm} mm</TableCell>
-                <TableCell>{s.bleed_mm} mm</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      setForm({
-                        name: `${s.name} copy`,
-                        code: `${s.code}-COPY`,
-                        width_mm: s.width_mm,
-                        height_mm: s.height_mm,
-                        corner_radius_mm: s.corner_radius_mm,
-                        bleed_mm: s.bleed_mm,
-                      }) || setOpen(true)
-                    }
-                  >
+                <TableCell className="capitalize text-muted-foreground">{s.orientation}</TableCell>
+                <TableCell className="text-right whitespace-nowrap">
+                  <Button variant="ghost" size="icon" onClick={() => duplicate(s)}>
                     <Copy className="size-4" />
                   </Button>
                   {!s.is_system_default ? (
