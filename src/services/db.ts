@@ -104,6 +104,39 @@ export async function nextCardNumber(orgId: string): Promise<string> {
   return data as unknown as string;
 }
 
+/** Bump the trailing numeric part of a card number ("ORG-2026-000001" -> "ORG-2026-000002"). */
+function bumpCardNumber(number: string): string {
+  const m = number.match(/^(.*?)(\d+)$/);
+  if (!m) return `${number}-1`;
+  const next = String(Number(m[2]) + 1).padStart(m[2]!.length, "0");
+  return `${m[1]}${next}`;
+}
+
+/**
+ * Insert a card, generating its number server-side and retrying on unique-number
+ * collisions (the sequence is count-based, so a stale or concurrent number can clash).
+ */
+export async function insertCardWithNumber(
+  orgId: string,
+  payload: Record<string, unknown>,
+): Promise<{ id: string; card_number: string }> {
+  let number = await nextCardNumber(orgId);
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const { data, error } = await supabase
+      .from("id_cards")
+      .insert({ ...payload, organization_id: orgId, card_number: number } as never)
+      .select("id, card_number")
+      .single();
+    if (!error) return { id: data.id as string, card_number: data.card_number as string };
+    const duplicate =
+      (error as { code?: string }).code === "23505" || /duplicate key|already exists/i.test(error.message);
+    if (!duplicate) throw error;
+    number = bumpCardNumber(number);
+  }
+  throw new Error("Could not allocate a unique card number");
+}
+
+
 export async function logPrint(input: {
   organization_id: string;
   card_id?: string | null;
