@@ -202,7 +202,11 @@ function Designer() {
   const save = async () => {
     setSaving(true);
     try {
-      const v = await saveTemplateDesign(templateId, front, back);
+      const v = await saveTemplateDesign(templateId, front, back, {
+        orientation,
+        width_mm: dims.widthMm,
+        height_mm: dims.heightMm,
+      });
       toast.success(`Saved as version ${v}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
