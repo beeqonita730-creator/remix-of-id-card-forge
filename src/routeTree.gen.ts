@@ -10,33 +10,133 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedCardSizesRouteImport } from './routes/_authenticated/card-sizes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
+import { Route as AuthenticatedDesignerTemplateIdRouteImport } from './routes/_authenticated/designer.$templateId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCardSizesRoute = AuthenticatedCardSizesRouteImport.update({
+  id: '/card-sizes',
+  path: '/card-sizes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPrintHistoryRoute =
+  AuthenticatedPrintHistoryRouteImport.update({
+    id: '/print-history',
+    path: '/print-history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const VerifyTokenRoute = VerifyTokenRouteImport.update({
+  id: '/verify/$token',
+  path: '/verify/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDesignerTemplateIdRoute =
+  AuthenticatedDesignerTemplateIdRouteImport.update({
+    id: '/designer/$templateId',
+    path: '/designer/$templateId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/card-sizes': typeof AuthenticatedCardSizesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
+  '/verify/$token': typeof VerifyTokenRoute
+  '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/card-sizes': typeof AuthenticatedCardSizesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
+  '/verify/$token': typeof VerifyTokenRoute
+  '/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/card-sizes': typeof AuthenticatedCardSizesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/verify/$token': typeof VerifyTokenRoute
+  '/_authenticated/designer/$templateId': typeof AuthenticatedDesignerTemplateIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/card-sizes'
+    | '/dashboard'
+    | '/print-history'
+    | '/templates'
+    | '/verify/$token'
+    | '/designer/$templateId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/card-sizes'
+    | '/dashboard'
+    | '/print-history'
+    | '/templates'
+    | '/verify/$token'
+    | '/designer/$templateId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/card-sizes'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/print-history'
+    | '/_authenticated/templates'
+    | '/verify/$token'
+    | '/_authenticated/designer/$templateId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  VerifyTokenRoute: typeof VerifyTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +148,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/card-sizes': {
+      id: '/_authenticated/card-sizes'
+      path: '/card-sizes'
+      fullPath: '/card-sizes'
+      preLoaderRoute: typeof AuthenticatedCardSizesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/print-history': {
+      id: '/_authenticated/print-history'
+      path: '/print-history'
+      fullPath: '/print-history'
+      preLoaderRoute: typeof AuthenticatedPrintHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/verify/$token': {
+      id: '/verify/$token'
+      path: '/verify/$token'
+      fullPath: '/verify/$token'
+      preLoaderRoute: typeof VerifyTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/designer/$templateId': {
+      id: '/_authenticated/designer/$templateId'
+      path: '/designer/$templateId'
+      fullPath: '/designer/$templateId'
+      preLoaderRoute: typeof AuthenticatedDesignerTemplateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCardSizesRoute: typeof AuthenticatedCardSizesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
+  AuthenticatedDesignerTemplateIdRoute: typeof AuthenticatedDesignerTemplateIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCardSizesRoute: AuthenticatedCardSizesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
+  AuthenticatedDesignerTemplateIdRoute: AuthenticatedDesignerTemplateIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  VerifyTokenRoute: VerifyTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
