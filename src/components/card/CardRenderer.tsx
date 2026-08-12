@@ -193,6 +193,7 @@ export function CardRenderer({
   selectedId,
   onSelect,
   interactive,
+  hideBackground,
   children,
   className,
 }: Props) {
