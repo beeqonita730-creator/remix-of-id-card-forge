@@ -463,6 +463,7 @@ function Designer() {
                 showBleed={showBleed}
                 bleed={bleed}
                 snap={snap}
+                hideBackground={design.background?.hiddenInEditor === true}
               />
             </Rulers>
           )}
@@ -492,6 +493,34 @@ function Designer() {
                 {(design.elements ?? []).length === 0 ? (
                   <p className="py-4 text-center text-xs text-muted-foreground">Nothing on this side yet.</p>
                 ) : null}
+                <div className="flex items-center justify-between rounded-md border border-dashed border-border px-2 py-1.5 text-xs text-muted-foreground">
+                  <span className="truncate">
+                    Background
+                    <span className="ml-1">
+                      ({design.background?.imageUrl ? (design.background.fit ?? "fill") : "colour"})
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      title={design.background?.hiddenInEditor ? "Show in editor" : "Hide in editor"}
+                      onClick={() => patchBackground({ hiddenInEditor: !design.background?.hiddenInEditor })}
+                    >
+                      {design.background?.hiddenInEditor ? (
+                        <EyeOff className="size-3.5" />
+                      ) : (
+                        <Eye className="size-3.5" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      title={design.background?.locked ? "Unlock" : "Lock"}
+                      onClick={() => patchBackground({ locked: !design.background?.locked })}
+                    >
+                      {design.background?.locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
+                    </button>
+                  </span>
+                </div>
               </div>
 
               {selected ? (
