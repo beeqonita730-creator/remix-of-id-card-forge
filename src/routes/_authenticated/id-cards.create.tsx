@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CardRenderer } from "@/components/card/CardRenderer";
 import { supabase } from "@/integrations/supabase/client";
-import { getProfile, getOrganization, listTemplates, nextCardNumber } from "@/services/db";
+import { getProfile, getOrganization, listTemplates, nextCardNumber, insertCardWithNumber } from "@/services/db";
 import { uploadAndSign } from "@/services/storage";
 import { emptyDesign, type CardDesign } from "@/lib/card/types";
 import { toast } from "sonner";
