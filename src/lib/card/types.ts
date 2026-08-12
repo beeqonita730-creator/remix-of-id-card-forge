@@ -1,3 +1,7 @@
+import { emptyBackground, type CardBackground } from "./background";
+
+export type { CardBackground };
+
 export type ElementType =
   | "text"
   | "image"
