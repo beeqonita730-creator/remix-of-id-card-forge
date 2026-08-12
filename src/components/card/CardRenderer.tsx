@@ -69,7 +69,7 @@ function ElementNode({
 }: {
   el: CardElement;
   ctx: Record<string, string>;
-  photoUrl?: string | null;
+  photoUrl?: string | null | undefined;
   scale: number;
 }) {
   const box: React.CSSProperties = {
