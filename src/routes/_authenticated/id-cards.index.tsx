@@ -43,13 +43,11 @@ function IdCardsPage() {
   }, [data, q]);
 
   return (
-    <AppShell>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">ID Cards</h1>
-          <p className="text-sm text-muted-foreground">Every card issued by your organisation.</p>
-        </div>
-        <div className="flex items-center gap-2">
+    <AppShell
+      title="ID Cards"
+      description="Every card issued by your organisation."
+      actions={
+        <>
           <Input
             placeholder="Search name or number…"
             value={q}
@@ -59,10 +57,10 @@ function IdCardsPage() {
           <Button asChild>
             <Link to="/id-cards/create">New card</Link>
           </Button>
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-lg border">
+        </>
+      }
+    >
+      <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
