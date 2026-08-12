@@ -37,6 +37,7 @@ export function DesignCanvas({
   design,
   widthMm,
   heightMm,
+  orientation,
   scale,
   data,
   selectedId,
@@ -44,6 +45,10 @@ export function DesignCanvas({
   onChange,
   showGrid,
   showSafe,
+  showBleed = false,
+  bleed = 3,
+  gridSize,
+  safeMargin = 3,
   snap,
 }: Props) {
   const drag = useRef<DragState | null>(null);
