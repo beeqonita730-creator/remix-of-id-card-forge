@@ -73,7 +73,7 @@ export interface ShapeElement extends BaseElement {
 export type CardElement = TextElement | ImageElement | CodeElement | ShapeElement;
 
 export interface CardDesign {
-  background: { color: string; imageUrl?: string | null };
+  background: CardBackground;
   elements: CardElement[];
 }
 
