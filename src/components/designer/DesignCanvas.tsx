@@ -7,6 +7,7 @@ interface Props {
   design: CardDesign;
   widthMm: number;
   heightMm: number;
+  orientation?: "portrait" | "landscape";
   scale: number;
   data: CardData;
   selectedId: string | null;
@@ -14,6 +15,10 @@ interface Props {
   onChange: (id: string, patch: Partial<CardElement>) => void;
   showGrid: boolean;
   showSafe: boolean;
+  showBleed?: boolean;
+  bleed?: number;
+  gridSize?: number;
+  safeMargin?: number;
   snap: number;
 }
 
