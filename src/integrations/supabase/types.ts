@@ -80,6 +80,7 @@ export type Database = {
           created_at: string
           description: string | null
           front_design: Json
+          height_mm: number | null
           id: string
           name: string
           organization_id: string
@@ -87,6 +88,7 @@ export type Database = {
           thumbnail_url: string | null
           updated_at: string
           version: number
+          width_mm: number | null
         }
         Insert: {
           active?: boolean
@@ -97,6 +99,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           front_design?: Json
+          height_mm?: number | null
           id?: string
           name: string
           organization_id: string
@@ -104,6 +107,7 @@ export type Database = {
           thumbnail_url?: string | null
           updated_at?: string
           version?: number
+          width_mm?: number | null
         }
         Update: {
           active?: boolean
@@ -114,6 +118,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           front_design?: Json
+          height_mm?: number | null
           id?: string
           name?: string
           organization_id?: string
@@ -121,6 +126,7 @@ export type Database = {
           thumbnail_url?: string | null
           updated_at?: string
           version?: number
+          width_mm?: number | null
         }
         Relationships: [
           {
@@ -161,6 +167,7 @@ export type Database = {
           nik: string | null
           organization: string | null
           organization_id: string
+          orientation: string
           phone: string | null
           photo_url: string | null
           position: string | null
@@ -192,6 +199,7 @@ export type Database = {
           nik?: string | null
           organization?: string | null
           organization_id: string
+          orientation?: string
           phone?: string | null
           photo_url?: string | null
           position?: string | null
@@ -223,6 +231,7 @@ export type Database = {
           nik?: string | null
           organization?: string | null
           organization_id?: string
+          orientation?: string
           phone?: string | null
           photo_url?: string | null
           position?: string | null

@@ -35,6 +35,27 @@ import {
   type CardElement,
   type ElementType,
 } from "@/lib/card/types";
+import { Rulers } from "@/components/designer/Rulers";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  formatDims,
+  normalizeOrientation,
+  orientationLabel,
+  resolveDims,
+  supportsOrientation,
+  transformDesign,
+  validateDesign,
+  TRANSFORM_MODES,
+  type Orientation,
+  type TransformMode,
+} from "@/lib/card/orientation";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/designer/$templateId")({
@@ -99,23 +120,46 @@ function Designer() {
   const [zoom, setZoom] = useState(4);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(true);
+  const [showBleed, setShowBleed] = useState(false);
+  const [showRulers, setShowRulers] = useState(true);
+  const [bleed, setBleed] = useState(3);
+  const [safeMargin, setSafeMargin] = useState(3);
+  const [gridSize, setGridSize] = useState(1);
   const [snap, setSnap] = useState(0.5);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [pendingOrientation, setPendingOrientation] = useState<Orientation | null>(null);
+  const [transformMode, setTransformMode] = useState<TransformMode>("relayout");
 
   useEffect(() => {
     if (!template) return;
     setFront((template.front_design as unknown as CardDesign) ?? emptyDesign());
     setBack((template.back_design as unknown as CardDesign) ?? emptyDesign());
+    setOrientation(normalizeOrientation(template.orientation));
   }, [template]);
 
   const size = template?.card_sizes;
+  const dims = resolveDims(size, orientation);
   const design = side === "front" ? front : back;
   const setDesign = side === "front" ? setFront : setBack;
   const selected = useMemo(
     () => (design.elements ?? []).find((e) => e.id === selectedId) ?? null,
     [design, selectedId],
   );
+  const issues = useMemo(() => validateDesign(design, dims, safeMargin), [design, dims, safeMargin]);
+
+  const applyOrientation = (next: Orientation, mode: TransformMode) => {
+    const from = resolveDims(size, orientation);
+    const to = resolveDims(size, next);
+    setFront((d) => transformDesign(d, from, to, mode, "front"));
+    setBack((d) => transformDesign(d, from, to, mode, "back"));
+    setOrientation(next);
+    setSelectedId(null);
+    setPendingOrientation(null);
+    toast.success(`Canvas is now ${orientationLabel(next).toLowerCase()} · ${formatDims(to)}`);
+  };
+
 
   const patchElement = (id: string, patch: Partial<CardElement>) =>
     setDesign((d) => ({
@@ -158,7 +202,11 @@ function Designer() {
   const save = async () => {
     setSaving(true);
     try {
-      const v = await saveTemplateDesign(templateId, front, back);
+      const v = await saveTemplateDesign(templateId, front, back, {
+        orientation,
+        width_mm: dims.widthMm,
+        height_mm: dims.heightMm,
+      });
       toast.success(`Saved as version ${v}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
@@ -187,11 +235,60 @@ function Designer() {
           <div>
             <p className="text-sm font-semibold leading-tight">{template.name}</p>
             <p className="text-xs text-muted-foreground">
-              {size.name} · {size.width_mm} × {size.height_mm} mm
+              {size.name} · {formatDims(dims)} · {orientationLabel(orientation)}
             </p>
           </div>
           <Badge variant="outline">v{template.version}</Badge>
+          <Tabs
+            value={orientation}
+            onValueChange={(v) => {
+              const next = normalizeOrientation(v);
+              if (next === orientation) return;
+              if (!supportsOrientation(size, next)) {
+                toast.error("This card size doesn't allow that orientation.");
+                return;
+              }
+              setPendingOrientation(next);
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="portrait">Portrait</TabsTrigger>
+              <TabsTrigger value="landscape">Landscape</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
+        <Dialog open={!!pendingOrientation} onOpenChange={(o) => !o && setPendingOrientation(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Switch to {pendingOrientation ? orientationLabel(pendingOrientation).toLowerCase() : ""} (
+                {pendingOrientation ? formatDims(resolveDims(size, pendingOrientation)) : ""})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-1.5">
+              {TRANSFORM_MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setTransformMode(m.id)}
+                  className={`w-full rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                    transformMode === m.id ? "border-primary bg-accent" : "border-border hover:border-primary"
+                  }`}
+                >
+                  <span className="block font-semibold">{m.label}</span>
+                  <span className="text-muted-foreground">{m.description}</span>
+                </button>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => pendingOrientation && applyOrientation(pendingOrientation, transformMode)}
+              >
+                Apply
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <div className="flex flex-wrap items-center gap-2">
           <Tabs value={side} onValueChange={(v) => { setSide(v as "front" | "back"); setSelectedId(null); }}>
             <TabsList>
@@ -278,12 +375,59 @@ function Designer() {
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Guides</p>
               <div className="mt-2 space-y-2">
                 <div className="flex items-center justify-between">
+                  <Label className="text-xs">Rulers (mm)</Label>
+                  <Switch checked={showRulers} onCheckedChange={setShowRulers} />
+                </div>
+                <div className="flex items-center justify-between">
                   <Label className="text-xs">Grid</Label>
                   <Switch checked={showGrid} onCheckedChange={setShowGrid} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Grid size</Label>
+                  <Select
+                    value={String(gridSize)}
+                    onValueChange={(v) => {
+                      setGridSize(Number(v));
+                      setSnap(Number(v));
+                    }}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 mm</SelectItem>
+                      <SelectItem value="5">5 mm</SelectItem>
+                      <SelectItem value="10">10 mm</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Safe area</Label>
                   <Switch checked={showSafe} onCheckedChange={setShowSafe} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Safe margin (mm)</Label>
+                  <Input
+                    className="h-8"
+                    type="number"
+                    step="0.5"
+                    value={safeMargin}
+                    onChange={(e) => setSafeMargin(Number(e.target.value))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Bleed</Label>
+                  <Switch checked={showBleed} onCheckedChange={setShowBleed} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">Bleed (mm)</Label>
+                  <Input
+                    className="h-8"
+                    type="number"
+                    step="0.5"
+                    value={bleed}
+                    onChange={(e) => setBleed(Number(e.target.value))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[11px] text-muted-foreground">Snap (mm)</Label>
@@ -305,8 +449,9 @@ function Designer() {
             <div style={{ boxShadow: "var(--shadow-card)" }}>
               <DesignCanvas
                 design={design}
-                widthMm={size.width_mm}
-                heightMm={size.height_mm}
+                widthMm={dims.widthMm}
+                heightMm={dims.heightMm}
+                orientation={orientation}
                 scale={zoom}
                 data={SAMPLE}
                 selectedId={null}
@@ -318,19 +463,26 @@ function Designer() {
               />
             </div>
           ) : (
-            <DesignCanvas
-              design={design}
-              widthMm={size.width_mm}
-              heightMm={size.height_mm}
-              scale={zoom}
-              data={SAMPLE}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onChange={patchElement}
-              showGrid={showGrid}
-              showSafe={showSafe}
-              snap={snap}
-            />
+            <Rulers widthMm={dims.widthMm} heightMm={dims.heightMm} scale={zoom} show={showRulers}>
+              <DesignCanvas
+                design={design}
+                widthMm={dims.widthMm}
+                heightMm={dims.heightMm}
+                orientation={orientation}
+                scale={zoom}
+                data={SAMPLE}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onChange={patchElement}
+                showGrid={showGrid}
+                gridSize={gridSize}
+                showSafe={showSafe}
+                safeMargin={safeMargin}
+                showBleed={showBleed}
+                bleed={bleed}
+                snap={snap}
+              />
+            </Rulers>
           )}
         </main>
 

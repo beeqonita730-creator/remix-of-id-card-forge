@@ -7,6 +7,7 @@ interface Props {
   design: CardDesign;
   widthMm: number;
   heightMm: number;
+  orientation?: "portrait" | "landscape" | undefined;
   scale: number;
   data: CardData;
   selectedId: string | null;
@@ -14,6 +15,10 @@ interface Props {
   onChange: (id: string, patch: Partial<CardElement>) => void;
   showGrid: boolean;
   showSafe: boolean;
+  showBleed?: boolean;
+  bleed?: number;
+  gridSize?: number;
+  safeMargin?: number;
   snap: number;
 }
 
@@ -32,6 +37,7 @@ export function DesignCanvas({
   design,
   widthMm,
   heightMm,
+  orientation,
   scale,
   data,
   selectedId,
@@ -39,6 +45,10 @@ export function DesignCanvas({
   onChange,
   showGrid,
   showSafe,
+  showBleed = false,
+  bleed = 3,
+  gridSize,
+  safeMargin = 3,
   snap,
 }: Props) {
   const drag = useRef<DragState | null>(null);
@@ -101,11 +111,19 @@ export function DesignCanvas({
         design={design}
         widthMm={widthMm}
         heightMm={heightMm}
+        orientation={orientation}
         scale={scale}
         data={data}
         interactive
         onSelect={onSelect}
-        guides={{ showGrid, showSafe, gridSize: snap || 2, safeMargin: 3 }}
+        guides={{
+          showGrid,
+          showSafe,
+          showBleed,
+          bleed,
+          gridSize: gridSize ?? snap ?? 1,
+          safeMargin,
+        }}
       >
         {(design.elements ?? []).map((el) =>
           el.visible === false ? null : (
