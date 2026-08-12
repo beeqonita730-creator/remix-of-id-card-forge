@@ -98,8 +98,14 @@ function CreateCard() {
   };
 
   const save = async () => {
-    if (!template || !size) return toast.error("Choose a template");
-    if (!form.full_name) return toast.error("Full name is required");
+    if (!template || !size) {
+      toast.error("Choose a template");
+      return;
+    }
+    if (!form.full_name) {
+      toast.error("Full name is required");
+      return;
+    }
     setSaving(true);
     try {
       const profile = await getProfile();
