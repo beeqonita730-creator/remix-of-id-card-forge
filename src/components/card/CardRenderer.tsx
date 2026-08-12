@@ -208,13 +208,29 @@ export function CardRenderer({
         position: "relative",
         width: `${(widthMm + bleed * 2) * scale}px`,
         height: `${(heightMm + bleed * 2) * scale}px`,
-        background: "#e2e8f0",
+        background: design.background?.color ?? "#ffffff",
+        backgroundImage: design.background?.imageUrl ? `url(${design.background.imageUrl})` : undefined,
+        backgroundSize: "100% 100%",
         overflow: "hidden",
       }}
       onPointerDown={(e) => {
         if (interactive && e.target === e.currentTarget) onSelect?.(null);
       }}
     >
+      {bleed > 0 && guides?.showTrim !== false ? (
+        <div
+          style={{
+            position: "absolute",
+            left: `${bleed * scale}px`,
+            top: `${bleed * scale}px`,
+            width: `${widthMm * scale}px`,
+            height: `${heightMm * scale}px`,
+            outline: "1px dashed rgba(15,23,42,.55)",
+            pointerEvents: "none",
+            zIndex: 9997,
+          }}
+        />
+      ) : null}
       <div
         style={{
           position: "absolute",
