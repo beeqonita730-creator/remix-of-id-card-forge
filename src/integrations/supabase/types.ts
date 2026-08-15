@@ -313,7 +313,6 @@ export type Database = {
           paper: string | null
           print_type: string
           template_version: number | null
-          updated_at: string
           user_id: string | null
         }
         Insert: {
@@ -326,7 +325,6 @@ export type Database = {
           paper?: string | null
           print_type?: string
           template_version?: number | null
-          updated_at?: string
           user_id?: string | null
         }
         Update: {
@@ -339,7 +337,6 @@ export type Database = {
           paper?: string | null
           print_type?: string
           template_version?: number | null
-          updated_at?: string
           user_id?: string | null
         }
         Relationships: [
@@ -545,7 +542,7 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
-          _user_id?: string
+          _user_id: string
         }
         Returns: boolean
       }
