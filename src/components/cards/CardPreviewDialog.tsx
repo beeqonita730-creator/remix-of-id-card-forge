@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -29,16 +29,19 @@ export function CardPreviewDialog({
   open,
   onOpenChange,
   canPrint = true,
+  autoPrint = false,
 }: {
   cardId: string | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   canPrint?: boolean;
+  autoPrint?: boolean;
 }) {
   const [side, setSide] = useState<"front" | "back">("front");
   const [includeBack, setIncludeBack] = useState(true);
   const [printing, setPrinting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const autoPrintFired = useRef(false);
 
   const { data: card, isLoading } = useQuery({
     queryKey: ["card", cardId],
@@ -69,6 +72,16 @@ export function CardPreviewDialog({
       paper: `${formatDims(dims)} card`,
     });
   };
+
+  useEffect(() => {
+    if (!autoPrint || !open || !row || isLoading || autoPrintFired.current) return;
+    autoPrintFired.current = true;
+    doPrint().then(() => onOpenChange(false));
+  }, [autoPrint, open, row, isLoading, onOpenChange, doPrint]);
+
+  useEffect(() => {
+    if (!open) autoPrintFired.current = false;
+  }, [open]);
 
   const doPdf = async () => {
     if (!row) return;
