@@ -27,7 +27,7 @@ export interface BackgroundAssetRow {
 export function useBackgroundAssets(filters: BackgroundAssetFilters) {
   return useQuery({
     queryKey: ["background-assets", filters],
-    queryFn: () => listBackgroundAssets(filters) as Promise<unknown as BackgroundAssetRow[]>,
+    queryFn: async () => (await listBackgroundAssets(filters)) as unknown as BackgroundAssetRow[],
   });
 }
 
