@@ -1,5 +1,15 @@
-import { useRef, useState } from "react";
-import { Image as ImageIcon, Lock, Unlock, Eye, EyeOff, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Image as ImageIcon,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  Trash2,
+  Upload,
+  Library,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,17 +23,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { uploadAsset } from "@/services/storage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { uploadAsset, signedUrl } from "@/services/storage";
 import { createTemplateAsset } from "@/services/db";
+import { BackgroundPickerDialog } from "@/components/designer/BackgroundPickerDialog";
+import type { BackgroundAssetRow } from "@/components/designer/BackgroundLibrary";
 import {
   ACCEPTED_BACKGROUND_TYPES,
   BACKGROUND_FITS,
   MAX_BACKGROUND_BYTES,
   applyFit,
+  backgroundBox,
   backgroundQuality,
   formatBytes,
   readImageMeta,
   type BackgroundFit,
+  type BackgroundGradient,
   type CardBackground,
 } from "@/lib/card/background";
 
@@ -36,6 +60,8 @@ interface Props {
   templateId: string;
   orientation: "portrait" | "landscape";
   cardSizeId?: string | null;
+  /** increment to open the file picker from outside (header button) */
+  uploadSignal?: number;
 }
 
 interface Pending {
@@ -44,6 +70,7 @@ interface Pending {
   storagePath: string;
   width: number;
   height: number;
+  replacing: boolean;
 }
 
 const QUALITY_CLASS: Record<string, string> = {
@@ -52,6 +79,15 @@ const QUALITY_CLASS: Record<string, string> = {
   warning: "text-amber-600",
   low: "text-destructive",
   unknown: "text-muted-foreground",
+};
+
+const DEFAULT_GRADIENT: BackgroundGradient = {
+  type: "linear",
+  angle: 180,
+  stops: [
+    { color: "#1e3a8a", at: 0 },
+    { color: "#0ea5e9", at: 100 },
+  ],
 };
 
 export function BackgroundPanel({
@@ -63,24 +99,35 @@ export function BackgroundPanel({
   templateId,
   orientation,
   cardSizeId,
+  uploadSignal,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const [fit, setFit] = useState<BackgroundFit>("fill");
+  const [library, setLibrary] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const firstSignal = useRef(uploadSignal);
+
+  useEffect(() => {
+    if (uploadSignal === undefined || uploadSignal === firstSignal.current) return;
+    firstSignal.current = uploadSignal;
+    fileRef.current?.click();
+  }, [uploadSignal]);
 
   const quality = backgroundQuality(background.widthPx, background.heightPx, widthMm, heightMm);
+  const hasImage = !!background.imageUrl;
 
   const pick = async (file: File) => {
     if (file.size > MAX_BACKGROUND_BYTES) {
-      toast.error("File is larger than 25 MB");
+      toast.error(`File is larger than ${Math.round(MAX_BACKGROUND_BYTES / (1024 * 1024))} MB`);
       return;
     }
     setBusy(true);
     try {
       const meta = await readImageMeta(file);
       const { storagePath, url } = await uploadAsset("template-assets", file);
-      setPending({ file, url, storagePath, width: meta.width, height: meta.height });
+      setPending({ file, url, storagePath, width: meta.width, height: meta.height, replacing: hasImage });
       setFit("fill");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
@@ -137,54 +184,226 @@ export function BackgroundPanel({
       );
       onChange(next);
       setPending(null);
-      toast.success("Background applied as the base layer");
+      toast.success("Background imported successfully — place dynamic fields on top.");
     } finally {
       setBusy(false);
     }
   };
 
+  const useFromLibrary = async (asset: BackgroundAssetRow) => {
+    setBusy(true);
+    try {
+      const url = await signedUrl(asset.storage_path);
+      if (!url) throw new Error("Could not open that artwork");
+      onChange(
+        applyFit(
+          {
+            ...background,
+            imageUrl: url,
+            storagePath: asset.storage_path,
+            assetId: asset.id,
+            fileName: asset.file_name ?? asset.name ?? "Background",
+            mimeType: asset.mime_type ?? null,
+            widthPx: asset.width_px,
+            heightPx: asset.height_px,
+            sizeBytes: asset.size_bytes,
+            rotation: 0,
+            locked: true,
+            hiddenInEditor: false,
+          },
+          background.fit ?? "fill",
+          widthMm,
+          heightMm,
+        ),
+      );
+      setLibrary(false);
+      toast.success("Background applied from the library");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not apply background");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = () => {
+    onChange({
+      imageUrl: null,
+      storagePath: null,
+      assetId: null,
+      fileName: null,
+      mimeType: null,
+      widthPx: null,
+      heightPx: null,
+      sizeBytes: null,
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      rotation: 0,
+    });
+    setConfirmRemove(false);
+    toast.success("Background removed — the card keeps its background colour.");
+  };
+
+  const box = backgroundBox(background, widthMm, heightMm);
+  const scalePct = background.widthPx && box.w ? Math.round((box.w / (widthMm || 1)) * 100) : 100;
+
+  const setScale = (pct: number) => {
+    const k = pct / 100;
+    const base = backgroundBox({ ...background, x: undefined, y: undefined, w: undefined, h: undefined }, widthMm, heightMm);
+    const w = base.w * k;
+    const h = base.h * k;
+    onChange({
+      w: Math.round(w * 100) / 100,
+      h: Math.round(h * 100) / 100,
+      x: Math.round((base.x + (base.w - w) / 2) * 100) / 100,
+      y: Math.round((base.y + (base.h - h) / 2) * 100) / 100,
+    });
+  };
+
+  const gradient = background.gradient ?? null;
+  const patchGradient = (patch: Partial<BackgroundGradient>) =>
+    onChange({ gradient: { ...DEFAULT_GRADIENT, ...gradient, ...patch } });
+
   const preview = backgroundQuality(pending?.width, pending?.height, widthMm, heightMm);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <input
-          ref={fileRef}
-          type="file"
-          accept={ACCEPTED_BACKGROUND_TYPES}
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) pick(f);
-          }}
-        />
-        <Button
-          variant="secondary"
-          size="sm"
-          className="w-full"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-        >
-          <Upload className="size-4" /> {busy ? "Uploading…" : "Upload artwork"}
+      <input
+        ref={fileRef}
+        type="file"
+        accept={ACCEPTED_BACKGROUND_TYPES}
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) pick(f);
+        }}
+      />
+      <div className="grid grid-cols-2 gap-1.5">
+        <Button size="sm" disabled={busy} onClick={() => fileRef.current?.click()}>
+          {hasImage ? <RefreshCw className="size-4" /> : <Upload className="size-4" />}
+          {busy ? "Working…" : hasImage ? "Replace" : "Upload"}
+        </Button>
+        <Button variant="secondary" size="sm" disabled={busy} onClick={() => setLibrary(true)}>
+          <Library className="size-4" /> Library
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={background.color ?? "#ffffff"}
-          onChange={(e) => onChange({ color: e.target.value })}
-          className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent"
-          aria-label="Background colour"
-        />
-        <Input
-          className="h-8"
-          value={background.color ?? "#ffffff"}
-          onChange={(e) => onChange({ color: e.target.value })}
-        />
+      <div className="space-y-1">
+        <Label className="text-[11px] text-muted-foreground">Background colour</Label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={background.color ?? "#ffffff"}
+            onChange={(e) => onChange({ color: e.target.value })}
+            className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent"
+            aria-label="Background colour"
+          />
+          <Input
+            className="h-8"
+            value={background.color ?? "#ffffff"}
+            onChange={(e) => onChange({ color: e.target.value })}
+          />
+        </div>
       </div>
 
-      {background.imageUrl ? (
+      <div className="space-y-2 rounded-md border border-border p-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Gradient</Label>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-[11px]"
+            onClick={() => onChange({ gradient: gradient ? null : DEFAULT_GRADIENT })}
+          >
+            {gradient ? "Remove" : "Add"}
+          </Button>
+        </div>
+        {gradient ? (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-1.5">
+              {(["linear", "radial"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => patchGradient({ type: t })}
+                  className={`rounded-md border px-2 py-1.5 text-[11px] capitalize transition-colors ${
+                    (gradient.type ?? "linear") === t ? "border-primary bg-accent" : "border-border hover:border-primary"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            {gradient.type !== "radial" ? (
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Angle {gradient.angle ?? 180}°</Label>
+                <Slider
+                  value={[gradient.angle ?? 180]}
+                  min={0}
+                  max={360}
+                  step={5}
+                  onValueChange={([v]) => patchGradient({ angle: v ?? 180 })}
+                />
+              </div>
+            ) : null}
+            <div className="space-y-1.5">
+              {(gradient.stops ?? []).map((s, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <input
+                    type="color"
+                    value={s.color}
+                    onChange={(e) => {
+                      const stops = [...(gradient.stops ?? [])];
+                      stops[i] = { ...s, color: e.target.value };
+                      patchGradient({ stops });
+                    }}
+                    className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent"
+                    aria-label={`Stop ${i + 1} colour`}
+                  />
+                  <Input
+                    className="h-8"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={s.at}
+                    onChange={(e) => {
+                      const stops = [...(gradient.stops ?? [])];
+                      stops[i] = { ...s, at: Number(e.target.value) };
+                      patchGradient({ stops });
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    disabled={(gradient.stops ?? []).length <= 2}
+                    onClick={() => patchGradient({ stops: (gradient.stops ?? []).filter((_, j) => j !== i) })}
+                  >
+                    <Trash2 className="size-3.5 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-full text-[11px]"
+                onClick={() =>
+                  patchGradient({ stops: [...(gradient.stops ?? []), { color: "#ffffff", at: 50 }] })
+                }
+              >
+                Add colour stop
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            Solid colour only. Add a gradient for a richer fallback behind the artwork.
+          </p>
+        )}
+      </div>
+
+      {hasImage ? (
         <div className="space-y-3 rounded-md border border-border p-2">
           <div className="flex items-start gap-2">
             <div
@@ -194,8 +413,7 @@ export function BackgroundPanel({
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-medium">{background.fileName ?? "Background"}</p>
               <p className="text-[11px] text-muted-foreground">
-                {background.widthPx ?? "?"}×{background.heightPx ?? "?"} px ·{" "}
-                {formatBytes(background.sizeBytes)}
+                {background.widthPx ?? "?"}×{background.heightPx ?? "?"} px · {formatBytes(background.sizeBytes)}
               </p>
               <p className={`text-[11px] ${QUALITY_CLASS[quality.level]}`}>
                 {quality.dpi ? `${quality.dpi} DPI · ` : ""}
@@ -203,6 +421,9 @@ export function BackgroundPanel({
               </p>
             </div>
           </div>
+          {quality.level === "low" || quality.level === "warning" ? (
+            <p className={`rounded-md bg-muted p-2 text-[11px] ${QUALITY_CLASS[quality.level]}`}>{quality.message}</p>
+          ) : null}
 
           <div className="space-y-1">
             <Label className="text-[11px] text-muted-foreground">Fit mode</Label>
@@ -212,9 +433,7 @@ export function BackgroundPanel({
                   key={f.id}
                   type="button"
                   title={f.description}
-                  onClick={() =>
-                    onChange(applyFit(background, f.id, widthMm, heightMm))
-                  }
+                  onClick={() => onChange(applyFit(background, f.id, widthMm, heightMm))}
                   className={`rounded-md border px-2 py-1.5 text-[11px] transition-colors ${
                     (background.fit ?? "fill") === f.id
                       ? "border-primary bg-accent"
@@ -235,11 +454,38 @@ export function BackgroundPanel({
                   className="h-8"
                   type="number"
                   step="0.5"
-                  value={background[k] ?? 0}
+                  disabled={background.locked !== false}
+                  value={background[k] ?? Math.round(box[k] * 100) / 100}
                   onChange={(e) => onChange({ [k]: Number(e.target.value) } as Partial<CardBackground>)}
                 />
               </div>
             ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Scale %</Label>
+              <Input
+                className="h-8"
+                type="number"
+                step="5"
+                min={10}
+                disabled={background.locked !== false}
+                value={scalePct}
+                onChange={(e) => setScale(Number(e.target.value) || 100)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Rotation °</Label>
+              <Input
+                className="h-8"
+                type="number"
+                step="1"
+                disabled={background.locked !== false}
+                value={background.rotation ?? 0}
+                onChange={(e) => onChange({ rotation: Number(e.target.value) })}
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -274,56 +520,67 @@ export function BackgroundPanel({
               {background.hiddenInEditor ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               {background.hiddenInEditor ? "Hidden" : "Visible"}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() =>
-                onChange({
-                  imageUrl: null,
-                  storagePath: null,
-                  assetId: null,
-                  fileName: null,
-                  widthPx: null,
-                  heightPx: null,
-                  sizeBytes: null,
-                  x: 0,
-                  y: 0,
-                  w: 0,
-                  h: 0,
-                })
-              }
-            >
+            <Button variant="ghost" size="icon" onClick={() => setConfirmRemove(true)}>
               <Trash2 className="size-4 text-destructive" />
             </Button>
           </div>
+          <p className="text-[10px] text-muted-foreground">
+            Hiding only affects the editor — generated cards always include the artwork.
+          </p>
         </div>
       ) : (
         <p className="rounded-md bg-muted p-2 text-[11px] text-muted-foreground">
           <ImageIcon className="mr-1 inline size-3" />
-          Upload an existing card design to use it as the locked base layer, then place dynamic fields on top.
+          No background uploaded. Upload an existing card design to use it as the locked base layer, then place
+          dynamic fields on top.
         </p>
       )}
+
+      <BackgroundPickerDialog
+        open={library}
+        onOpenChange={setLibrary}
+        onPick={useFromLibrary}
+        orientation={orientation}
+        widthMm={widthMm}
+        heightMm={heightMm}
+      />
+
+      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove background?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The artwork stays in your background library. This card side will fall back to its background colour.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={remove}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import background</DialogTitle>
+            <DialogTitle>{pending?.replacing ? "Replace background" : "Background import"}</DialogTitle>
             <DialogDescription>
-              Choose how the artwork should sit on the {widthMm} × {heightMm} mm canvas.
+              {pending?.replacing
+                ? "The existing background will be replaced. Dynamic elements stay untouched."
+                : `Choose how the artwork sits on the ${widthMm} × ${heightMm} mm canvas.`}
             </DialogDescription>
           </DialogHeader>
           {pending ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3 rounded-md border border-border p-2">
-                <img
-                  src={pending.url}
-                  alt=""
-                  className="size-16 rounded border border-border object-contain"
-                />
+                <img src={pending.url} alt="" className="size-16 rounded border border-border object-contain" />
                 <div className="min-w-0 text-xs">
                   <p className="truncate font-medium">{pending.file.name}</p>
                   <p className="text-muted-foreground">
                     {pending.width}×{pending.height} px · {formatBytes(pending.file.size)}
+                  </p>
+                  <p className="text-muted-foreground">
+                    Target: {widthMm} × {heightMm} mm · {orientation}
                   </p>
                   <p className={QUALITY_CLASS[preview.level]}>
                     {preview.dpi ? `${preview.dpi} DPI · ` : ""}
@@ -353,7 +610,7 @@ export function BackgroundPanel({
               Cancel
             </Button>
             <Button onClick={confirm} disabled={busy}>
-              Apply background
+              {pending?.replacing ? "Replace" : "Apply background"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -351,3 +351,61 @@ export async function deleteTemplateAsset(id: string) {
   const { error } = await supabase.from("template_assets").delete().eq("id", id);
   if (error) throw error;
 }
+
+export interface BackgroundAssetFilters {
+  orientation?: "portrait" | "landscape" | null;
+  side?: "FRONT" | "BACK" | null;
+  cardSizeId?: string | null;
+  search?: string | null;
+}
+
+/** Every background artwork in the workspace — the Background Library feed. */
+export async function listBackgroundAssets(filters: BackgroundAssetFilters = {}) {
+  let query = supabase
+    .from("template_assets")
+    .select("*, card_sizes(name), card_templates(name)")
+    .eq("asset_type", "BACKGROUND")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (filters.orientation) query = query.eq("orientation", filters.orientation);
+  if (filters.side) query = query.eq("side", filters.side);
+  if (filters.cardSizeId) query = query.eq("card_size_id", filters.cardSizeId);
+  if (filters.search) query = query.ilike("file_name", `%${filters.search}%`);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** How many templates still reference a background storage path. */
+export async function countBackgroundUsage(storagePath: string) {
+  const { data, error } = await supabase
+    .from("template_assets")
+    .select("id, template_id")
+    .eq("asset_type", "BACKGROUND")
+    .eq("storage_path", storagePath);
+  if (error) throw error;
+  return (data ?? []).filter((r) => r.template_id).length;
+}
+
+export async function duplicateBackgroundAsset(id: string) {
+  const { data: src, error } = await supabase
+    .from("template_assets")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error || !src) throw error ?? new Error("Background not found");
+  return createTemplateAsset({
+    template_id: null,
+    side: (src.side as "FRONT" | "BACK") ?? "FRONT",
+    asset_type: "BACKGROUND",
+    name: `${src.name ?? src.file_name ?? "Background"} copy`,
+    storage_path: src.storage_path,
+    file_name: src.file_name,
+    mime_type: src.mime_type,
+    width_px: src.width_px,
+    height_px: src.height_px,
+    size_bytes: src.size_bytes,
+    orientation: (src.orientation as "portrait" | "landscape" | null) ?? null,
+    card_size_id: src.card_size_id,
+  });
+}
