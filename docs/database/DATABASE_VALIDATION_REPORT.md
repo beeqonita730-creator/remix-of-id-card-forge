@@ -1,9 +1,37 @@
 # DATABASE VALIDATION REPORT
 
 Generated: 2026-08-12  
-Audit phase: Reverse-engineering → Validation → Application-integration hardening  
-Supabase project ref: `wcwhinzcwdfxgdgbuudr`  
+Final runtime audit pass: 2026-08-12  
+Audit phase: Reverse-engineering → Validation → Application-integration hardening → Final runtime validation attempt  
+Active Supabase project ref: `znadhctxfeygxywvwtfy` (see `.env`)  
 Canonical schema source: `supabase/migrations/` (001 → 014)
+
+---
+
+# FINAL RUNTIME SCORECARD (Per §16 of final protocol)
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| Migration | NOT EXECUTED — REASON (a) | `supabase start` failed exit 5999 — container image pull network EOFs. `supabase db reset` could not be run against any real Postgres. Supabase MCP integration error `Invalid project ref: remix-of-id-card-forge (code 500000)` — remote project unavailable for `supabase_apply_migration`. |
+| Schema | PASS (code-level / lexical only) | 001 → 014 concatenation in [schema.sql](file:///d:/PROYEK%20WEB%20MASTER/remix-of-id-card-forge/supabase/schema.sql) matches canonical `migrations/`. Live SQL `information_schema` verification: NOT EXECUTED — REASON (a). |
+| Auth | NOT EXECUTED — REASON (a) | `handle_new_user()` flow cannot be tested without real `auth.users` insert + trigger + live DB session. Code-level audit PASS (atomic PL/pgSQL block, COALESCE defaults, no partial writes). |
+| RLS | NOT EXECUTED — REASON (a) | `set_config('request.jwt.claim.sub', …)` cross-tenant SELECT/INSERT/UPDATE/DELETE matrix against real `authenticated` role not performed. Code-level audit PASS (fail-closed default; no `USING(true)`; every table predicated on `current_org_id()` + role gates where applicable). |
+| Storage | NOT EXECUTED — REASON (a) | Real `uploadCardholderPhoto` / `uploadTemplateAsset` HTTP upload → `storage.objects` + signed URL retrieval not performed. Code-level audit PASS: scoped paths `{orgId}/cardholders/{id}/{uuid}.ext` produced by [storage.ts](file:///d:/PROYEK%20WEB%20MASTER/remix-of-id-card-forge/src/services/storage.ts); storage bucket policies require `foldername[1] = org_id`. Flat path bug already fixed. |
+| QR | NOT EXECUTED — REASON (a) | Real `encode(gen_random_bytes(12), 'hex')` generation + `verify_card()` RPC result column whitelist + anon EXECUTE not executed against a real Postgres. Code-level audit PASS: `verify_card` SELECT list = card_number, card_state, expiry, full_name, job_position, org_name only. |
+| Card Number | NOT EXECUTED — REASON (a) | 10-concurrent `insertCardWithNumber` insert + `UNIQUE(org_id, card_number)` race not executed. Code-level audit PASS: unique constraint enforced at DB; 8-iteration retry loop in [db.ts](file:///d:/PROYEK%20WEB%20MASTER/remix-of-id-card-forge/src/services/db.ts) `insertCardWithNumber`. |
+| Cardholder CRUD | NOT EXECUTED — REASON (c) | Requires dev app server + browser session + a running Supabase (reason a). No app booted for this audit. |
+| Templates | NOT EXECUTED — REASON (c) | Requires dev app server + browser. |
+| Printing | NOT EXECUTED — REASON (c) | Requires dev app server + browser. `print_history` `updated_at` column already patched. |
+| Frontend Integration | PASS (audit-level only) | Grep audit of every `supabase.from(…)` / `.rpc(…)` / `.storage.from(…)` call in [src/](file:///d:/PROYEK%20WEB%20MASTER/remix-of-id-card-forge/src): all 16 references target valid tables / RPCs / buckets that exist in the canonical migration chain. Browser runtime tests: NOT EXECUTED — REASON (c). |
+| TypeScript | **PASS — ACTUALLY EXECUTED** | `npx tsc --noEmit` (strict:true, project config) → exit 0, 0 errors. Re-confirmed 2026-08-12 final pass. |
+| Build | **PASS — ACTUALLY EXECUTED** | `npm run build` → 3 phases: Client (built in 4.11 s) ✓ / SSR ✓ / Nitro (Cloudflare) ✓ → overall exit 0. Re-confirmed 2026-08-12 final pass. |
+| E2E | NOT EXECUTED — REASON (a) + REASON (c) | Requires local Supabase (docker pulls failing) + dev app server + browser. Full 14-step flow not executed. |
+
+REASON (a) = Supabase local/remote runtime unavailable. Docker daemon healthy (`docker info` exit 0), but `supabase start` fails because 10 required public.ecr.aws / ghcr.io / docker.io image pulls repeatedly hit unexpected EOF + HTTP HEAD EOF errors after partial downloads; command exits 5999. Supabase MCP `supabase_get_project` returns integration error Invalid project ref (code 500000), so migrations could not be pushed to the linked remote project either. **All tests requiring a real PostgreSQL / Supabase instance are blocked until one of (Docker image pull network recovers) OR (Supabase MCP project ref integration is fixed).**
+REASON (c) = Dev app server and browser environment not booted. Even with a healthy DB, CRUD/Template/Print/E2E UI flows would require a Vite dev server plus scripted or manual browser interaction.
+
+---
+
 
 ---
 
