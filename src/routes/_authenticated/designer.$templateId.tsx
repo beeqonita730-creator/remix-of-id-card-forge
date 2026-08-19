@@ -234,11 +234,11 @@ function Designer() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
         <div className="flex items-center gap-3">
           <Link to="/templates">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Back to templates">
               <ArrowLeft className="size-4" />
             </Button>
           </Link>
@@ -306,11 +306,11 @@ function Designer() {
               <TabsTrigger value="back">Back</TabsTrigger>
             </TabsList>
           </Tabs>
-          <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(1.5, z - 0.5))}>
+          <Button variant="ghost" size="icon" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(1.5, z - 0.5))}>
             <ZoomOut className="size-4" />
           </Button>
           <span className="w-10 text-center text-xs text-muted-foreground">{Math.round(zoom * 25)}%</span>
-          <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(10, z + 0.5))}>
+          <Button variant="ghost" size="icon" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(10, z + 0.5))}>
             <ZoomIn className="size-4" />
           </Button>
           <Button variant={preview ? "default" : "secondary"} size="sm" onClick={() => setPreview(!preview)}>
@@ -532,7 +532,7 @@ function Designer() {
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {selected.type} properties
                     </p>
-                    <Button variant="ghost" size="icon" onClick={() => removeElement(selected.id)}>
+                    <Button variant="ghost" size="icon" aria-label="Delete selected element" onClick={() => removeElement(selected.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </div>
