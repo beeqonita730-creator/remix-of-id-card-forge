@@ -9,6 +9,7 @@ import {
   Printer,
   LogOut,
   ShieldCheck,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ const NAV = [
   { to: "/id-cards", label: "ID Cards", icon: IdCard },
   { to: "/id-cards/create", label: "Create Card", icon: Plus },
   { to: "/templates", label: "Templates", icon: LayoutTemplate },
+  { to: "/backgrounds", label: "Backgrounds", icon: ImageIcon },
   { to: "/card-sizes", label: "Card Sizes", icon: Ruler },
   { to: "/print-history", label: "Print History", icon: Printer },
 ] as const;
