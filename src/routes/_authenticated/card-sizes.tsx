@@ -197,11 +197,11 @@ function CardSizes() {
                 </TableCell>
                 <TableCell className="capitalize text-muted-foreground">{s.orientation}</TableCell>
                 <TableCell className="text-right whitespace-nowrap">
-                  <Button variant="ghost" size="icon" onClick={() => duplicate(s)}>
+                  <Button variant="ghost" size="icon" aria-label={`Duplicate ${s.name}`} onClick={() => duplicate(s)}>
                     <Copy className="size-4" />
                   </Button>
                   {!s.is_system_default ? (
-                    <Button variant="ghost" size="icon" onClick={() => remove.mutate(s.id)}>
+                    <Button variant="ghost" size="icon" aria-label={`Delete ${s.name}`} onClick={() => remove.mutate(s.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   ) : null}
