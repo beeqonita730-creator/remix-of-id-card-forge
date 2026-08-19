@@ -44,6 +44,8 @@ import {
   applyFit,
   backgroundBox,
   backgroundQuality,
+  computeFitBox,
+  DEFAULT_FIT,
   formatBytes,
   readImageMeta,
   type BackgroundFit,
@@ -250,7 +252,13 @@ export function BackgroundPanel({
 
   const setScale = (pct: number) => {
     const k = pct / 100;
-    const base = backgroundBox({ ...background, x: undefined, y: undefined, w: undefined, h: undefined }, widthMm, heightMm);
+    const base = computeFitBox(
+      background.fit ?? DEFAULT_FIT,
+      background.widthPx,
+      background.heightPx,
+      widthMm,
+      heightMm,
+    );
     const w = base.w * k;
     const h = base.h * k;
     onChange({
