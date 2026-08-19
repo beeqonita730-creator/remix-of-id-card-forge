@@ -385,6 +385,7 @@ export function BackgroundPanel({
                     variant="ghost"
                     size="icon"
                     className="size-8"
+                    aria-label="Remove gradient stop"
                     disabled={(gradient.stops ?? []).length <= 2}
                     onClick={() => patchGradient({ stops: (gradient.stops ?? []).filter((_, j) => j !== i) })}
                   >
@@ -528,7 +529,7 @@ export function BackgroundPanel({
               {background.hiddenInEditor ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               {background.hiddenInEditor ? "Hidden" : "Visible"}
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setConfirmRemove(true)}>
+            <Button variant="ghost" size="icon" aria-label="Remove background" onClick={() => setConfirmRemove(true)}>
               <Trash2 className="size-4 text-destructive" />
             </Button>
           </div>
