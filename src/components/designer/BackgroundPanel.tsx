@@ -160,6 +160,8 @@ export function BackgroundPanel({
     if (!pending) return;
     setBusy(true);
     try {
+    setBusy(true);
+    try {
       let assetId: string | null = null;
       try {
         const rec = await createTemplateAsset({
