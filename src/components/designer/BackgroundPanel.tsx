@@ -9,6 +9,8 @@ import {
   Upload,
   Library,
   RefreshCw,
+  RotateCw,
+  AlignHorizontalJustifyCenter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,11 @@ interface Props {
   cardSizeId?: string | null;
   /** increment to open the file picker from outside (header button) */
   uploadSignal?: number;
+  /** increment to open the background library picker from outside */
+  librarySignal?: number;
+  /** a file dropped onto the canvas, handled once then cleared */
+  droppedFile?: File | null;
+  onDroppedFileHandled?: () => void;
 }
 
 interface Pending {
@@ -102,6 +109,9 @@ export function BackgroundPanel({
   orientation,
   cardSizeId,
   uploadSignal,
+  librarySignal,
+  droppedFile,
+  onDroppedFileHandled,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -110,12 +120,19 @@ export function BackgroundPanel({
   const [library, setLibrary] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const firstSignal = useRef(uploadSignal);
+  const firstLibrarySignal = useRef(librarySignal);
 
   useEffect(() => {
     if (uploadSignal === undefined || uploadSignal === firstSignal.current) return;
     firstSignal.current = uploadSignal;
     fileRef.current?.click();
   }, [uploadSignal]);
+
+  useEffect(() => {
+    if (librarySignal === undefined || librarySignal === firstLibrarySignal.current) return;
+    firstLibrarySignal.current = librarySignal;
+    setLibrary(true);
+  }, [librarySignal]);
 
   const quality = backgroundQuality(background.widthPx, background.heightPx, widthMm, heightMm);
   const hasImage = !!background.imageUrl;
