@@ -90,6 +90,21 @@ const QUALITY_CLASS: Record<string, string> = {
   unknown: "text-muted-foreground",
 };
 
+type AlignH = "left" | "center" | "right";
+type AlignV = "top" | "middle" | "bottom";
+
+const ALIGNMENTS: { id: string; short: string; label: string; h: AlignH; v: AlignV }[] = [
+  { id: "tl", short: "↖", label: "Top left", h: "left", v: "top" },
+  { id: "tc", short: "↑", label: "Top centre", h: "center", v: "top" },
+  { id: "tr", short: "↗", label: "Top right", h: "right", v: "top" },
+  { id: "ml", short: "←", label: "Middle left", h: "left", v: "middle" },
+  { id: "mc", short: "•", label: "Centre", h: "center", v: "middle" },
+  { id: "mr", short: "→", label: "Middle right", h: "right", v: "middle" },
+  { id: "bl", short: "↙", label: "Bottom left", h: "left", v: "bottom" },
+  { id: "bc", short: "↓", label: "Bottom centre", h: "center", v: "bottom" },
+  { id: "br", short: "↘", label: "Bottom right", h: "right", v: "bottom" },
+];
+
 const DEFAULT_GRADIENT: BackgroundGradient = {
   type: "linear",
   angle: 180,
