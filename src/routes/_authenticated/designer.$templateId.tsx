@@ -19,6 +19,7 @@ import {
   EyeOff,
   Lock,
   Unlock,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -140,6 +141,9 @@ function Designer() {
   const [orientation, setOrientation] = useState<Orientation>("portrait");
   const [pendingOrientation, setPendingOrientation] = useState<Orientation | null>(null);
   const [transformMode, setTransformMode] = useState<TransformMode>("relayout");
+  const [librarySignal, setLibrarySignal] = useState(0);
+  const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (!template) return;
