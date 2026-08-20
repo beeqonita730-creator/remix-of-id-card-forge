@@ -649,6 +649,10 @@ export function BackgroundPanel({
         open={library}
         onOpenChange={setLibrary}
         onPick={useFromLibrary}
+        onUpload={() => {
+          setLibrary(false);
+          fileRef.current?.click();
+        }}
         orientation={orientation}
         widthMm={widthMm}
         heightMm={heightMm}
