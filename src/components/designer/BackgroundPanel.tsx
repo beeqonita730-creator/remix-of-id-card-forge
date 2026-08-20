@@ -9,6 +9,8 @@ import {
   Upload,
   Library,
   RefreshCw,
+  RotateCw,
+  AlignHorizontalJustifyCenter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,11 @@ interface Props {
   cardSizeId?: string | null;
   /** increment to open the file picker from outside (header button) */
   uploadSignal?: number;
+  /** increment to open the background library picker from outside */
+  librarySignal?: number;
+  /** a file dropped onto the canvas, handled once then cleared */
+  droppedFile?: File | null;
+  onDroppedFileHandled?: () => void;
 }
 
 interface Pending {
@@ -82,6 +89,21 @@ const QUALITY_CLASS: Record<string, string> = {
   low: "text-destructive",
   unknown: "text-muted-foreground",
 };
+
+type AlignH = "left" | "center" | "right";
+type AlignV = "top" | "middle" | "bottom";
+
+const ALIGNMENTS: { id: string; short: string; label: string; h: AlignH; v: AlignV }[] = [
+  { id: "tl", short: "↖", label: "Top left", h: "left", v: "top" },
+  { id: "tc", short: "↑", label: "Top centre", h: "center", v: "top" },
+  { id: "tr", short: "↗", label: "Top right", h: "right", v: "top" },
+  { id: "ml", short: "←", label: "Middle left", h: "left", v: "middle" },
+  { id: "mc", short: "•", label: "Centre", h: "center", v: "middle" },
+  { id: "mr", short: "→", label: "Middle right", h: "right", v: "middle" },
+  { id: "bl", short: "↙", label: "Bottom left", h: "left", v: "bottom" },
+  { id: "bc", short: "↓", label: "Bottom centre", h: "center", v: "bottom" },
+  { id: "br", short: "↘", label: "Bottom right", h: "right", v: "bottom" },
+];
 
 const DEFAULT_GRADIENT: BackgroundGradient = {
   type: "linear",
@@ -102,6 +124,9 @@ export function BackgroundPanel({
   orientation,
   cardSizeId,
   uploadSignal,
+  librarySignal,
+  droppedFile,
+  onDroppedFileHandled,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -110,12 +135,19 @@ export function BackgroundPanel({
   const [library, setLibrary] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const firstSignal = useRef(uploadSignal);
+  const firstLibrarySignal = useRef(librarySignal);
 
   useEffect(() => {
     if (uploadSignal === undefined || uploadSignal === firstSignal.current) return;
     firstSignal.current = uploadSignal;
     fileRef.current?.click();
   }, [uploadSignal]);
+
+  useEffect(() => {
+    if (librarySignal === undefined || librarySignal === firstLibrarySignal.current) return;
+    firstLibrarySignal.current = librarySignal;
+    setLibrary(true);
+  }, [librarySignal]);
 
   const quality = backgroundQuality(background.widthPx, background.heightPx, widthMm, heightMm);
   const hasImage = !!background.imageUrl;
@@ -227,6 +259,14 @@ export function BackgroundPanel({
     }
   };
 
+  const handledDrop = useRef<File | null>(null);
+  useEffect(() => {
+    if (!droppedFile || handledDrop.current === droppedFile) return;
+    handledDrop.current = droppedFile;
+    void pick(droppedFile).finally(() => onDroppedFileHandled?.());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [droppedFile]);
+
   const remove = () => {
     onChange({
       imageUrl: null,
@@ -270,6 +310,25 @@ export function BackgroundPanel({
   };
 
   const gradient = background.gradient ?? null;
+
+  const artworkLandscape =
+    background.widthPx && background.heightPx ? background.widthPx >= background.heightPx : null;
+  const cardLandscape = widthMm >= heightMm;
+  const canAutoRotate = artworkLandscape !== null && artworkLandscape !== cardLandscape;
+
+  const autoRotate = () => {
+    const next = ((background.rotation ?? 0) + 90) % 360;
+    onChange({ ...applyFit(background, background.fit ?? DEFAULT_FIT, widthMm, heightMm), rotation: next });
+    toast.success(`Artwork rotated to match the ${cardLandscape ? "landscape" : "portrait"} card`);
+  };
+
+  const align = (h: AlignH, v: AlignV) => {
+    const b = backgroundBox(background, widthMm, heightMm);
+    const x = h === "left" ? 0 : h === "right" ? widthMm - b.w : (widthMm - b.w) / 2;
+    const y = v === "top" ? 0 : v === "bottom" ? heightMm - b.h : (heightMm - b.h) / 2;
+    onChange({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
+  };
+
   const patchGradient = (patch: Partial<BackgroundGradient>) =>
     onChange({ gradient: { ...DEFAULT_GRADIENT, ...gradient, ...patch } });
 
@@ -453,6 +512,47 @@ export function BackgroundPanel({
                 </button>
               ))}
             </div>
+            <p className="text-[10px] text-muted-foreground">
+              Fit = contain (whole artwork visible) · Fill = cover (edge to edge, may crop).
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-1 h-8 w-full text-[11px]"
+              disabled={!canAutoRotate}
+              onClick={autoRotate}
+            >
+              <RotateCw className="size-3.5" /> Auto-rotate to {orientation}
+            </Button>
+            {!canAutoRotate ? (
+              <p className="text-[10px] text-muted-foreground">
+                Artwork orientation already matches the {orientation} card.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <AlignHorizontalJustifyCenter className="size-3.5" /> Align to card
+            </Label>
+            <div className="grid grid-cols-3 gap-1">
+              {ALIGNMENTS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  title={a.label}
+                  aria-label={`Align background ${a.label.toLowerCase()}`}
+                  disabled={background.locked !== false}
+                  onClick={() => align(a.h, a.v)}
+                  className="rounded-md border border-border py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-40"
+                >
+                  {a.short}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Unlock the background to nudge or align it against the {widthMm}×{heightMm} mm card.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -549,6 +649,10 @@ export function BackgroundPanel({
         open={library}
         onOpenChange={setLibrary}
         onPick={useFromLibrary}
+        onUpload={() => {
+          setLibrary(false);
+          fileRef.current?.click();
+        }}
         orientation={orientation}
         widthMm={widthMm}
         heightMm={heightMm}

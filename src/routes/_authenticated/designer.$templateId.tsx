@@ -19,6 +19,7 @@ import {
   EyeOff,
   Lock,
   Unlock,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -140,6 +141,9 @@ function Designer() {
   const [orientation, setOrientation] = useState<Orientation>("portrait");
   const [pendingOrientation, setPendingOrientation] = useState<Orientation | null>(null);
   const [transformMode, setTransformMode] = useState<TransformMode>("relayout");
+  const [librarySignal, setLibrarySignal] = useState(0);
+  const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (!template) return;
@@ -316,6 +320,9 @@ function Designer() {
           <Button variant={preview ? "default" : "secondary"} size="sm" onClick={() => setPreview(!preview)}>
             <Eye className="size-4" /> Preview
           </Button>
+          <Button variant="secondary" size="sm" onClick={() => setLibrarySignal((n) => n + 1)}>
+            <Upload className="size-4" /> Upload background
+          </Button>
           <Button size="sm" onClick={save} disabled={saving}>
             <Save className="size-4" /> {saving ? "Saving…" : "Save version"}
           </Button>
@@ -345,6 +352,7 @@ function Designer() {
               </p>
               <div className="mt-2">
                 <BackgroundPanel
+                  key={side}
                   background={design.background}
                   onChange={patchBackground}
                   widthMm={dims.widthMm}
@@ -353,6 +361,9 @@ function Designer() {
                   templateId={templateId}
                   orientation={orientation}
                   cardSizeId={size.id}
+                  librarySignal={librarySignal}
+                  droppedFile={droppedFile}
+                  onDroppedFileHandled={() => setDroppedFile(null)}
                 />
               </div>
 
