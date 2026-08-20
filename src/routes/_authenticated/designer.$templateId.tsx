@@ -320,6 +320,9 @@ function Designer() {
           <Button variant={preview ? "default" : "secondary"} size="sm" onClick={() => setPreview(!preview)}>
             <Eye className="size-4" /> Preview
           </Button>
+          <Button variant="secondary" size="sm" onClick={() => setLibrarySignal((n) => n + 1)}>
+            <Upload className="size-4" /> Upload background
+          </Button>
           <Button size="sm" onClick={save} disabled={saving}>
             <Save className="size-4" /> {saving ? "Saving…" : "Save version"}
           </Button>
