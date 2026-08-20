@@ -7,6 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 import {
   BackgroundMeta,
   BackgroundSearch,
@@ -19,12 +21,22 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPick: (asset: BackgroundAssetRow) => void;
+  /** optional: open the file picker to upload new artwork instead */
+  onUpload?: () => void;
   orientation: "portrait" | "landscape";
   widthMm: number;
   heightMm: number;
 }
 
-export function BackgroundPickerDialog({ open, onOpenChange, onPick, orientation, widthMm, heightMm }: Props) {
+export function BackgroundPickerDialog({
+  open,
+  onOpenChange,
+  onPick,
+  onUpload,
+  orientation,
+  widthMm,
+  heightMm,
+}: Props) {
   const [search, setSearch] = useState("");
   const [scope, setScope] = useState<"all" | "orientation">("orientation");
   const { data, isLoading } = useBackgroundAssets({
@@ -52,6 +64,11 @@ export function BackgroundPickerDialog({ open, onOpenChange, onPick, orientation
               <TabsTrigger value="all">All</TabsTrigger>
             </TabsList>
           </Tabs>
+          {onUpload ? (
+            <Button size="sm" onClick={onUpload}>
+              <Upload className="size-4" /> Upload new
+            </Button>
+          ) : null}
         </div>
         <div className="grid max-h-[55vh] grid-cols-2 gap-3 overflow-auto sm:grid-cols-3">
           {assets.map((a) => (
