@@ -352,6 +352,7 @@ function Designer() {
               </p>
               <div className="mt-2">
                 <BackgroundPanel
+                  key={side}
                   background={design.background}
                   onChange={patchBackground}
                   widthMm={dims.widthMm}
@@ -360,6 +361,9 @@ function Designer() {
                   templateId={templateId}
                   orientation={orientation}
                   cardSizeId={size.id}
+                  librarySignal={librarySignal}
+                  droppedFile={droppedFile}
+                  onDroppedFileHandled={() => setDroppedFile(null)}
                 />
               </div>
 
