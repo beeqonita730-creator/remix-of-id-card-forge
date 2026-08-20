@@ -245,6 +245,7 @@ export function BackgroundPanel({
   };
 
   const remove = () => {
+    /* eslint-disable-next-line no-empty */
     onChange({
       imageUrl: null,
       storagePath: null,
