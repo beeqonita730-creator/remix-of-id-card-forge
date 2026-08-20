@@ -310,6 +310,25 @@ export function BackgroundPanel({
   };
 
   const gradient = background.gradient ?? null;
+
+  const artworkLandscape =
+    background.widthPx && background.heightPx ? background.widthPx >= background.heightPx : null;
+  const cardLandscape = widthMm >= heightMm;
+  const canAutoRotate = artworkLandscape !== null && artworkLandscape !== cardLandscape;
+
+  const autoRotate = () => {
+    const next = ((background.rotation ?? 0) + 90) % 360;
+    onChange({ ...applyFit(background, background.fit ?? DEFAULT_FIT, widthMm, heightMm), rotation: next });
+    toast.success(`Artwork rotated to match the ${cardLandscape ? "landscape" : "portrait"} card`);
+  };
+
+  const align = (h: AlignH, v: AlignV) => {
+    const b = backgroundBox(background, widthMm, heightMm);
+    const x = h === "left" ? 0 : h === "right" ? widthMm - b.w : (widthMm - b.w) / 2;
+    const y = v === "top" ? 0 : v === "bottom" ? heightMm - b.h : (heightMm - b.h) / 2;
+    onChange({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
+  };
+
   const patchGradient = (patch: Partial<BackgroundGradient>) =>
     onChange({ gradient: { ...DEFAULT_GRADIENT, ...gradient, ...patch } });
 
