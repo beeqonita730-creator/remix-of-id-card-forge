@@ -478,6 +478,47 @@ export function BackgroundPanel({
                 </button>
               ))}
             </div>
+            <p className="text-[10px] text-muted-foreground">
+              Fit = contain (whole artwork visible) · Fill = cover (edge to edge, may crop).
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-1 h-8 w-full text-[11px]"
+              disabled={!canAutoRotate}
+              onClick={autoRotate}
+            >
+              <RotateCw className="size-3.5" /> Auto-rotate to {orientation}
+            </Button>
+            {!canAutoRotate ? (
+              <p className="text-[10px] text-muted-foreground">
+                Artwork orientation already matches the {orientation} card.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <AlignHorizontalJustifyCenter className="size-3.5" /> Align to card
+            </Label>
+            <div className="grid grid-cols-3 gap-1">
+              {ALIGNMENTS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  title={a.label}
+                  aria-label={`Align background ${a.label.toLowerCase()}`}
+                  disabled={background.locked !== false}
+                  onClick={() => align(a.h, a.v)}
+                  className="rounded-md border border-border py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-40"
+                >
+                  {a.short}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Unlock the background to nudge or align it against the {widthMm}×{heightMm} mm card.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
