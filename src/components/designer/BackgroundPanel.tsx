@@ -244,8 +244,15 @@ export function BackgroundPanel({
     }
   };
 
+  const handledDrop = useRef<File | null>(null);
+  useEffect(() => {
+    if (!droppedFile || handledDrop.current === droppedFile) return;
+    handledDrop.current = droppedFile;
+    void pick(droppedFile).finally(() => onDroppedFileHandled?.());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [droppedFile]);
+
   const remove = () => {
-    /* eslint-disable-next-line no-empty */
     onChange({
       imageUrl: null,
       storagePath: null,
