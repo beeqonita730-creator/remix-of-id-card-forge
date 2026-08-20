@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedBackgroundsRouteImport } from './routes/_authenticated/backgrounds'
 import { Route as AuthenticatedCardSizesRouteImport } from './routes/_authenticated/card-sizes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPrintHistoryRouteImport } from './routes/_authenticated/print-history'
@@ -35,6 +36,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedBackgroundsRoute =
+  AuthenticatedBackgroundsRouteImport.update({
+    id: '/backgrounds',
+    path: '/backgrounds',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCardSizesRoute = AuthenticatedCardSizesRouteImport.update({
   id: '/card-sizes',
   path: '/card-sizes',
@@ -83,6 +90,7 @@ const AuthenticatedIdCardsCreateRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/backgrounds': typeof AuthenticatedBackgroundsRoute
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/backgrounds': typeof AuthenticatedBackgroundsRoute
   '/card-sizes': typeof AuthenticatedCardSizesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/print-history': typeof AuthenticatedPrintHistoryRoute
@@ -109,6 +118,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/backgrounds': typeof AuthenticatedBackgroundsRoute
   '/_authenticated/card-sizes': typeof AuthenticatedCardSizesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/print-history': typeof AuthenticatedPrintHistoryRoute
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/backgrounds'
     | '/card-sizes'
     | '/dashboard'
     | '/print-history'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/backgrounds'
     | '/card-sizes'
     | '/dashboard'
     | '/print-history'
@@ -148,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/backgrounds'
     | '/_authenticated/card-sizes'
     | '/_authenticated/dashboard'
     | '/_authenticated/print-history'
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/backgrounds': {
+      id: '/_authenticated/backgrounds'
+      path: '/backgrounds'
+      fullPath: '/backgrounds'
+      preLoaderRoute: typeof AuthenticatedBackgroundsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/card-sizes': {
       id: '/_authenticated/card-sizes'
@@ -248,6 +268,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBackgroundsRoute: typeof AuthenticatedBackgroundsRoute
   AuthenticatedCardSizesRoute: typeof AuthenticatedCardSizesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPrintHistoryRoute: typeof AuthenticatedPrintHistoryRoute
@@ -258,6 +279,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBackgroundsRoute: AuthenticatedBackgroundsRoute,
   AuthenticatedCardSizesRoute: AuthenticatedCardSizesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPrintHistoryRoute: AuthenticatedPrintHistoryRoute,
