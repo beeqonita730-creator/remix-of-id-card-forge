@@ -246,7 +246,6 @@ export function BackgroundPanel({
 
   const remove = () => {
     onChange({
-    onChange({
       imageUrl: null,
       storagePath: null,
       assetId: null,
