@@ -19,13 +19,10 @@ export const Route = createFileRoute("/verify/$token")({
 
 function Verify() {
   const { token } = Route.useParams();
+  const verify = useServerFn(verifyCard);
   const { data, isLoading } = useQuery({
     queryKey: ["verify", token],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("verify_card", { _token: token });
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
+    queryFn: async () => await verify({ data: { token } }),
   });
 
   const state = data?.card_state;
