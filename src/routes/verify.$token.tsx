@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ShieldCheck, ShieldX, ShieldAlert, IdCard } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { verifyCard } from "@/lib/verify.functions";
 
 export const Route = createFileRoute("/verify/$token")({
   head: () => ({
@@ -18,13 +19,10 @@ export const Route = createFileRoute("/verify/$token")({
 
 function Verify() {
   const { token } = Route.useParams();
+  const verify = useServerFn(verifyCard);
   const { data, isLoading } = useQuery({
     queryKey: ["verify", token],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("verify_card", { _token: token });
-      if (error) throw error;
-      return data?.[0] ?? null;
-    },
+    queryFn: async () => await verify({ data: { token } }),
   });
 
   const state = data?.card_state;
